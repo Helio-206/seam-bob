@@ -1,0 +1,24 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .bob/hooks/log_tool.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SEMANTIC_BOUNDARY_CONTRACT_PATH=../runtime-contracts/customer-field-migration.json python3 .bob/hooks/semantic_boundary_gate.py --hook",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
