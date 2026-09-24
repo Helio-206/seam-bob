@@ -1,0 +1,14 @@
+{
+  "name": "seam-bob",
+  "private": true,
+  "version": "1.0.0",
+  "description": "SEAM — Semantic Boundary Guard for Agent Handoffs",
+  "scripts": {
+    "install:all": "npm install --prefix demo-ui && npm install --prefix demo-workspace",
+    "dev": "npm run dev --prefix demo-ui",
+    "build": "npm run build --prefix demo-ui",
+    "lint": "npm run lint --prefix demo-ui",
+    "typecheck": "npm run typecheck --prefix demo-ui",
+    "test": "npm test --prefix demo-workspace"
+  }
+}

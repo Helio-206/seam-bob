@@ -1,0 +1,35 @@
+# Secrets and local configuration
+BOB_API_KEY
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.token
+
+# Dependencies and build output
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Local runtime state
+work/
+demo-workspace/.seam/
+demo-workspace/.semantic-boundary/events.ndjson
+*.log
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Research-only material
+experiments/
+traces/
+tmp/
