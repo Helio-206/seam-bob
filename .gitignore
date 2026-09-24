@@ -35,3 +35,4 @@ Thumbs.db
 experiments/
 traces/
 tmp/
+.vercel/
