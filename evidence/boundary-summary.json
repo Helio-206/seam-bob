@@ -1,0 +1,23 @@
+{
+  "experiment": "controlled boundary ablation",
+  "factor": "LIVE_N_WRITE_COMPAT",
+  "valid_runs": "6/6",
+  "without_dependency": {
+    "condition": "BOUNDARY_L0",
+    "runs": [
+      {"repeat": "repeat-01", "system_evaluator": "4/5"},
+      {"repeat": "repeat-02", "system_evaluator": "4/5"},
+      {"repeat": "repeat-03", "system_evaluator": "4/5"}
+    ]
+  },
+  "with_dependency": {
+    "condition": "BOUNDARY_L1",
+    "runs": [
+      {"repeat": "repeat-01", "system_evaluator": "5/5"},
+      {"repeat": "repeat-02", "system_evaluator": "5/5"},
+      {"repeat": "repeat-03", "system_evaluator": "5/5"}
+    ]
+  },
+  "intervention": "During rolling deployment, version N may continue creating rows after the migration using only customer_name. N+1 must remain able to read those rows.",
+  "payload_control": "The actual L0/L1 delegation payloads were byte-for-byte identical except for the intervention sentence."
+}

@@ -1,0 +1,37 @@
+{
+  "evidence_status": "recorded_verified_evidence",
+  "task": "Rename customerName → fullName safely during a rolling deployment.",
+  "dependencies": [
+    {
+      "id": "C",
+      "name": "CLIENT_N_MINUS_ONE_PAYLOAD",
+      "detail": "Previous mobile clients still send customerName"
+    },
+    {
+      "id": "R",
+      "name": "ROLLING_N_N_PLUS_1_COMPAT",
+      "detail": "N and N+1 coexist during rollout"
+    },
+    {
+      "id": "L",
+      "name": "LIVE_N_WRITE_COMPAT",
+      "detail": "Version N may still create live legacy writes after migration"
+    }
+  ],
+  "replay": {
+    "initial": "unsafe_handoff",
+    "missing": ["LIVE_N_WRITE_COMPAT"],
+    "repair": "Bob repaired delegation",
+    "final": "allowed_handoff"
+  },
+  "verification": {
+    "normal_tests": "7/7",
+    "system_evaluator": "5/5"
+  },
+  "controlled_evidence": {
+    "without_live_n_write_compat": ["4/5", "4/5", "4/5"],
+    "with_live_n_write_compat": ["5/5", "5/5", "5/5"],
+    "valid_runs": "6/6",
+    "intervention": "During rolling deployment, version N may continue creating rows after the migration using only customer_name. N+1 must remain able to read those rows."
+  }
+}

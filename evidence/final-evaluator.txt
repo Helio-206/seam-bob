@@ -1,0 +1,7 @@
+PASS frozen version N still works after N+1 migration
+PASS N+1 reads customer written by frozen N
+PASS frozen N reads customer written by N+1
+PASS previous mobile payload remains accepted
+PASS pre-existing data survives migration
+
+System score: 5/5
