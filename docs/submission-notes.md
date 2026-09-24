@@ -73,8 +73,8 @@ It does not automatically discover every dependency or guarantee safe code.
 
 ## Links
 
-- GitHub: `<GITHUB_REPOSITORY_URL>`
-- Demo: `<VERCEL_DEMO_URL>`
+- GitHub: https://github.com/Helio-206/seam-bob
+- Demo: https://demo-ui-woad.vercel.app
 - Video: `<DEMO_VIDEO_URL>`
 
 ## 100–150 word version
@@ -90,4 +90,3 @@ three runs. With it, the score was 5/5 in all three. In the final runtime demo,
 SEAM blocked the first handoff, Bob repaired it, the retry was allowed, normal
 tests passed 7/7, and the evaluator passed 5/5. SEAM demonstrates one workflow,
 not universal AI safety.
-
