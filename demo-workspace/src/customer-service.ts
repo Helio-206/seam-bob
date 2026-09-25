@@ -18,21 +18,22 @@ export class CustomerService {
 
   createCustomer(input: CreateCustomerInput): CustomerView {
     const name = input.fullName ?? input.customerName ?? "";
-    const row = this.db.insert({
-      customer_name: name,
-      full_name: name,
-    });
+    const payload: Record<string, string> = { customer_name: name };
+    if (this.db.hasColumn("full_name")) {
+      payload["full_name"] = name;
+    }
+    const row = this.db.insert(payload);
 
     return {
       id: row.id,
-      fullName: row.full_name,
+      fullName: row.full_name ?? row.customer_name,
       customerName: row.customer_name,
     };
   }
 
   getCustomer(id: string): CustomerView {
     const fullName =
-      this.db.readColumn(id, "full_name") ||
+      (this.db.hasColumn("full_name") && this.db.readColumn(id, "full_name")) ||
       this.db.readColumn(id, "customer_name");
 
     return {

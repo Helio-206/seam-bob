@@ -90,3 +90,14 @@ test("LIVE_N_WRITE_COMPAT: row written by version N (customer_name only) still r
   assert.equal(fetched.fullName, "Lise Meitner");
   assert.equal(fetched.customerName, "Lise Meitner");
 });
+
+test("version-N service (no migration): createCustomer works against un-migrated DB", () => {
+  const db = createInitialDatabase();
+  // No migration applied — full_name column does not exist yet.
+
+  const service = new CustomerService(db);
+  const created = service.createCustomer({ customerName: "Test User" });
+
+  assert.equal(created.customerName, "Test User");
+  assert.equal(created.fullName, "Test User");
+});
