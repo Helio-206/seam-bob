@@ -252,7 +252,7 @@ export default function Home() {
           <div className="evidence-card evidence-card--without"><span>without L</span><strong>4/5</strong><small>repeat-01 · repeat-02 · repeat-03</small></div>
           <div className="evidence-arrow"><ArrowRight size={22} /></div>
           <div className="evidence-card evidence-card--with"><span>with L</span><strong>5/5</strong><small>repeat-01 · repeat-02 · repeat-03</small></div>
-          <div className="evidence-facts"><div><span>Normal tests</span><b>7/7</b></div><div><span>System evaluator</span><b>5/5</b></div><div><span>Valid boundary runs</span><b>6/6</b></div></div>
+          <div className="evidence-facts"><div><span>Normal tests</span><b>{evidence.verification.normal_tests}</b></div><div><span>System evaluator</span><b>{evidence.verification.system_evaluator}</b></div><div><span>Valid boundary runs</span><b>{evidence.controlled_evidence.valid_runs}</b></div></div>
         </div>
       </section>
 

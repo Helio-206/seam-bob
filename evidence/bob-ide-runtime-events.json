@@ -1,0 +1,35 @@
+[
+  {
+    "tool": "spawn_subagent",
+    "decision": "BLOCK",
+    "missing_dependencies": ["LIVE_N_WRITE_COMPAT"],
+    "observed_dependencies": [
+      "CLIENT_N_MINUS_ONE_PAYLOAD",
+      "ROLLING_N_N_PLUS_1_COMPAT"
+    ],
+    "required_dependencies": [
+      "CLIENT_N_MINUS_ONE_PAYLOAD",
+      "ROLLING_N_N_PLUS_1_COMPAT",
+      "LIVE_N_WRITE_COMPAT"
+    ],
+    "timestamp": "2026-09-25T18:10:28.262700+00:00",
+    "description_hash": "d99a049272c6b1185cf27b82a2e82348082880a1589f5422c6ec42e9a7dde9d8"
+  },
+  {
+    "tool": "spawn_subagent",
+    "decision": "ALLOW",
+    "missing_dependencies": [],
+    "observed_dependencies": [
+      "CLIENT_N_MINUS_ONE_PAYLOAD",
+      "ROLLING_N_N_PLUS_1_COMPAT",
+      "LIVE_N_WRITE_COMPAT"
+    ],
+    "required_dependencies": [
+      "CLIENT_N_MINUS_ONE_PAYLOAD",
+      "ROLLING_N_N_PLUS_1_COMPAT",
+      "LIVE_N_WRITE_COMPAT"
+    ],
+    "timestamp": "2026-09-25T18:10:43.294140+00:00",
+    "description_hash": "731246974cb44eda8c55c09f0f92c770600f8e826464a6b3e48524b72e6ba2af"
+  }
+]

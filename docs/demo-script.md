@@ -48,7 +48,7 @@ DELEGATION ALLOWED
 Show the downstream result:
 
 ```text
-Normal tests       7 / 7
+Normal tests       8 / 8
 System invariants  5 / 5
 ```
 
@@ -62,4 +62,3 @@ With L:    5/5 × 3
 ```
 
 Close with: “SEAM verifies the boundary before delegated work executes.”
-

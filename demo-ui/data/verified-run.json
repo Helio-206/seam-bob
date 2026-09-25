@@ -25,7 +25,7 @@
     "final": "allowed_handoff"
   },
   "verification": {
-    "normal_tests": "7/7",
+    "normal_tests": "8/8",
     "system_evaluator": "5/5"
   },
   "controlled_evidence": {

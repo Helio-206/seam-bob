@@ -34,7 +34,7 @@ The final runtime demonstration exercised the real boundary:
 3. Bob repaired the handoff independently.
 4. The retry was allowed.
 5. Implementation completed.
-6. Normal tests passed 7/7.
+6. Normal tests passed 8/8.
 7. The external five-invariant evaluator passed 5/5.
 
 ## Limitations
@@ -44,4 +44,3 @@ The final runtime demonstration exercised the real boundary:
 - It does not claim universal AI safety or complete semantic understanding.
 - It does not automatically discover all dependencies in arbitrary repositories.
 - More workflows and contract-discovery methods are future work.
-

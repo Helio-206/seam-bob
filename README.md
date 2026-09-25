@@ -25,9 +25,9 @@ precise repair feedback when a dependency is missing.
 | Without `LIVE_N_WRITE_COMPAT` | 4/5 × 3 runs |
 | With `LIVE_N_WRITE_COMPAT` | 5/5 × 3 runs |
 
-The final runtime demonstration is:
+The official IBM Bob IDE runtime demonstration is:
 
-`BLOCK → Bob repairs → ALLOW → normal tests 7/7 → evaluator 5/5`
+`BLOCK → Bob repairs handoff → ALLOW → normal tests 8/8 → system evaluator 5/5`
 
 These are verified results from one controlled workflow. SEAM does not claim a
 universal guarantee of safe AI code.
@@ -96,7 +96,7 @@ The curated evidence is in [`evidence/`](evidence/):
 
 - [`boundary-results.md`](evidence/boundary-results.md) — controlled L0/L1 table.
 - [`final-evaluator.txt`](evidence/final-evaluator.txt) — five external invariants.
-- [`final-normal-tests.txt`](evidence/final-normal-tests.txt) — 7/7 local tests.
+- [`final-normal-tests.txt`](evidence/final-normal-tests.txt) — 8/8 final local tests.
 - [`runtime-demo-summary.md`](evidence/runtime-demo-summary.md) — blocked and repaired handoff.
 
 The full explanation is in [`docs/methodology.md`](docs/methodology.md).
@@ -124,4 +124,3 @@ are future work.
 ## License
 
 MIT. See [`LICENSE`](LICENSE).
-

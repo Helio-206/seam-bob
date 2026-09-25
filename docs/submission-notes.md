@@ -30,9 +30,9 @@ handoff before downstream execution; Bob repairs the handoff and retries.
 
 The controlled experiment held the task, baseline, evaluator, and runner
 constant. L0 scored 4/5 in repeat-01, repeat-02, and repeat-03. L1 scored 5/5
-in all three. The final runtime demonstration completed with normal tests 7/7
-and external invariants 5/5. This is evidence from one workflow, not a claim
-of universal AI safety.
+in all three. The official IBM Bob IDE runtime demonstration completed with
+normal tests 8/8 and external invariants 5/5. This is evidence from one
+workflow, not a claim of universal AI safety.
 
 ## Technologies
 
@@ -88,5 +88,5 @@ workflow, the isolated `LIVE_N_WRITE_COMPAT` dependency was the only difference
 between paired payloads. Without it, the external evaluator scored 4/5 in all
 three runs. With it, the score was 5/5 in all three. In the final runtime demo,
 SEAM blocked the first handoff, Bob repaired it, the retry was allowed, normal
-tests passed 7/7, and the evaluator passed 5/5. SEAM demonstrates one workflow,
+tests passed 8/8, and the evaluator passed 5/5. SEAM demonstrates one workflow,
 not universal AI safety.

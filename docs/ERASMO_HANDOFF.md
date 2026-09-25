@@ -30,7 +30,7 @@ subagent may write locally correct code that is globally unsafe.
 7. Bob repairs the handoff automatically.
 8. Retry is allowed.
 9. Implementation completes.
-10. Normal tests pass 7/7.
+10. Normal tests pass 8/8.
 11. External evaluator passes 5/5.
 
 ## Evidence
@@ -67,4 +67,3 @@ Do not say: “SEAM guarantees safe AI code.”
 
 Use: “In our controlled workflow, SEAM prevented a reproducible delegation
 failure before downstream execution.”
-

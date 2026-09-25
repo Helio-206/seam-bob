@@ -1,7 +1,9 @@
-PASS frozen version N still works after N+1 migration
-PASS N+1 reads customer written by frozen N
-PASS frozen N reads customer written by N+1
-PASS previous mobile payload remains accepted
-PASS pre-existing data survives migration
+Captured stdout from `bash scripts/run_system_evaluator.sh`:
+
+PASS frozen version N still works after the N+1 migration
+PASS N+1 reads a customer written by frozen N
+PASS frozen N reads a customer written by N+1
+PASS the immediately previous mobile payload remains accepted by N+1
+PASS pre-existing customer data survives the migration
 
 System score: 5/5
