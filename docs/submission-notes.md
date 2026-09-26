@@ -29,6 +29,12 @@ Bob IDE run, SEAM checks the actual `spawn_subagent` call through Bob's
 missing, gives Bob repair feedback, and allows the repaired retry. The
 recorded implementation passed 8/8 normal tests and 5/5 system invariants.
 
+The repository also contains a separate Bob IDE proof task. It began with a
+fully missing manifest (`0/3` observed), was blocked, then passed on retry with
+all three obligations carried. That additional task completed 7/7 normal
+tests and 5/5 system invariants. The two runs must be presented as separate
+evidence, not merged into one timeline.
+
 ## Product story
 
 **Without SEAM:** Bob delegates → a critical rollout rule is lost → code looks
@@ -80,6 +86,18 @@ The current prototype demonstrates deterministic discovery and
 evidence-backed enforcement for one migration workflow. It does not guarantee
 safe AI code, eliminate hallucinations, or solve agent context loss
 universally. IBM Bob is not invoked by replay mode.
+
+## Evidence package for submission
+
+- `bob_sessions/helio_task01_semantic_boundary_summary.png` — primary Bob task.
+- `bob_sessions/helio_task02_proof_carrying_summary.png` — additional proof task.
+- `evidence/bob-ide-runtime-events.json` — primary `2/3 → BLOCK → 3/3 → ALLOW` records.
+- `evidence/proof-carrying-bob-runtime-events.ndjson` — additional `0/3 → BLOCK → 3/3 → ALLOW` records.
+- `evidence/proof-carrying-outcome-witness.json` — additional `7/7` and `5/5` receipt.
+
+The release demo is a deterministic replay and does not invoke Bob. The final
+video must show the real IBM Bob IDE task separately; the replay URL alone is
+not a substitute for that requirement.
 
 ## Links
 

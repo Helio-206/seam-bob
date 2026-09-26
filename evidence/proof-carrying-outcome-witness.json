@@ -62,14 +62,14 @@
   ],
   "normal_tests": {
     "status": "PASS",
-    "passed": 8,
-    "total": 8,
-    "output": "\n> semantic-boundary-repeatability-lab@0.2.0 test\n> tsx --test tests/**/*.test.ts\n\n✔ creates and reads a customer (2.232094ms)\n✔ migration can run once without corrupting the current service (0.404941ms)\n✔ fullName input produces correct fullName and customerName output (0.429086ms)\n✔ getCustomer returns both fullName and customerName populated (0.482015ms)\n✔ migration is idempotent (run twice, service still works) (0.620967ms)\n✔ dual-write: both DB columns contain the correct value after createCustomer (0.564841ms)\n✔ LIVE_N_WRITE_COMPAT: row written by version N (customer_name only) still returns correct fullName (0.524766ms)\n✔ version-N service (no migration): createCustomer works against un-migrated DB (0.334118ms)\nℹ tests 8\nℹ suites 0\nℹ pass 8\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 203.707055\n"
+    "passed": 7,
+    "total": 7,
+    "output": "\n> semantic-boundary-repeatability-lab@0.2.0 test\n> tsx --test tests/**/*.test.ts\n\n✔ creates and reads a customer (1.874383ms)\n✔ migration can run once without corrupting the current service (0.290249ms)\n✔ fullName input produces correct fullName and customerName output (0.2315ms)\n✔ getCustomer returns both fullName and customerName populated (0.223495ms)\n✔ migration is idempotent (run twice, service still works) (0.219257ms)\n✔ dual-write: both DB columns contain the correct value after createCustomer (0.241168ms)\n✔ LIVE_N_WRITE_COMPAT: row written by version N (customer_name only) still returns correct fullName (0.220109ms)\nℹ tests 7\nℹ suites 0\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 181.216506\n"
   },
   "system_evaluator": {
     "status": "PASS",
     "passed": 5,
     "total": 5,
-    "output": "✔ frozen version N still works after the N+1 migration (1.372949ms)\n✔ N+1 reads a customer written by frozen N (0.357011ms)\n✔ frozen N reads a customer written by N+1 (0.389753ms)\n✔ the immediately previous mobile payload remains accepted by N+1 (0.202711ms)\n✔ pre-existing customer data survives the migration (0.182853ms)\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 26.406662\n"
+    "output": "✔ frozen version N still works after the N+1 migration (1.750182ms)\n✔ N+1 reads a customer written by frozen N (0.449796ms)\n✔ frozen N reads a customer written by N+1 (0.405814ms)\n✔ the immediately previous mobile payload remains accepted by N+1 (0.257198ms)\n✔ pre-existing customer data survives the migration (1.986461ms)\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 30.214961\n"
   }
 }

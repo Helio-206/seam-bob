@@ -33,5 +33,15 @@
     "with_live_n_write_compat": ["5/5", "5/5", "5/5"],
     "valid_runs": "6/6",
     "intervention": "During rolling deployment, version N may continue creating rows after the migration using only customer_name. N+1 must remain able to read those rows."
+  },
+  "additional_runtime_proof": {
+    "label": "Full-manifest-loss repair proof",
+    "sequence": "0/3 observed → BLOCK → Bob repairs → 3/3 observed → ALLOW",
+    "evidence_reference": "seam.handoff.v1:structural_manifest_valid",
+    "normal_tests": "7/7",
+    "system_evaluator": "5/5",
+    "runtime_events": "evidence/proof-carrying-bob-runtime-events.ndjson",
+    "outcome_witness": "evidence/proof-carrying-outcome-witness.json",
+    "bob_session_summary": "bob_sessions/helio_task02_proof_carrying_summary.png"
   }
 }

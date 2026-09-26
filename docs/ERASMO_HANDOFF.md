@@ -38,6 +38,16 @@ tells another.”
 Replay mode shows the verified Bob IDE sequence. It is a visual replay of the
 recorded BLOCK and ALLOW events, not a new Bob run.
 
+The repository also includes a second real Bob IDE proof task. That task began
+with all three obligations absent, produced `BLOCK`, then retried with a
+structurally valid manifest and produced `ALLOW`. It finished with `7/7`
+normal tests and `5/5` system invariants. Present this as supporting technical
+evidence; keep the 55-second judge replay focused on the primary `2/3` loss.
+
+The final video must show the real Bob IDE task itself for at least 90 seconds.
+The replay URL and screenshots support the submission but do not replace that
+video requirement.
+
 ## Why IBM Bob
 
 Bob Agent mode can delegate work to subagents with isolated context. Isolation
@@ -66,6 +76,8 @@ compiled contract at Bob's delegation boundary.
 ## Technical references
 
 - Bob IDE decisions: [`evidence/bob-ide-runtime-events.json`](../evidence/bob-ide-runtime-events.json)
+- Additional Bob proof: [`evidence/proof-carrying-bob-runtime-events.ndjson`](../evidence/proof-carrying-bob-runtime-events.ndjson)
+- Additional outcome receipt: [`evidence/proof-carrying-outcome-witness.json`](../evidence/proof-carrying-outcome-witness.json)
 - Runtime summary: [`evidence/runtime-demo-summary.md`](../evidence/runtime-demo-summary.md)
 - Discovery implementation: [`docs/semantic-discovery.md`](semantic-discovery.md)
 - Session screenshots: [`bob_sessions/`](../bob_sessions/)

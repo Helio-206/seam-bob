@@ -39,6 +39,15 @@ In the recorded IBM Bob IDE run, Bob delegated a customer-field migration to a
 focused subagent. Two of three rollout requirements survived. SEAM blocked the
 handoff, Bob repaired it and retried, and the repaired handoff was allowed.
 
+The repository also preserves a separate proof-carrying Bob IDE run. That task
+started with no valid manifest, so SEAM blocked the handoff with all three
+obligations missing. Bob repaired the handoff; the retry carried all three
+obligations and was allowed because the structural manifest was valid. That
+additional fixture completed `7/7` normal tests and `5/5` system invariants.
+The two runs are intentionally kept distinct: the primary judge replay shows
+partial semantic loss (`2/3`), while the additional proof shows complete
+manifest loss (`0/3`) and repair.
+
 **Coding agents review code. SEAM reviews what one agent tells another.**
 SEAM is for AI-assisted application maintenance, schema migration, rolling
 deployment, and release safety.
@@ -179,6 +188,8 @@ The curated evidence is in [`evidence/`](evidence/):
 - [`final-evaluator.txt`](evidence/final-evaluator.txt) — five external invariants.
 - [`final-normal-tests.txt`](evidence/final-normal-tests.txt) — 8/8 final local tests.
 - [`runtime-demo-summary.md`](evidence/runtime-demo-summary.md) — blocked and repaired handoff.
+- [`proof-carrying-bob-runtime-events.ndjson`](evidence/proof-carrying-bob-runtime-events.ndjson) — additional real Bob `BLOCK → ALLOW` records with structural-manifest evidence.
+- [`proof-carrying-outcome-witness.json`](evidence/proof-carrying-outcome-witness.json) — additional Bob proof receipt (`7/7`, `5/5`).
 
 The full explanation is in [`docs/methodology.md`](docs/methodology.md).
 

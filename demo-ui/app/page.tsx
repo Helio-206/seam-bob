@@ -330,6 +330,7 @@ export default function Home() {
           <div><b>Bob IDE session evidence</b><code>bob_sessions/</code><small>original session screenshots preserved</small></div>
           <div><b>Discovery provenance</b><code>infra/rollout-policy.md + evaluator/frozen-vN/legacy-customer-service.ts</code><small>migration + current reader fallback complete the L derivation</small></div>
           <div><b>Recorded event evidence</b><code>evidence/runtime-demo-summary.md</code><small>BLOCK: C/R observed, L missing · ALLOW: C/R/L observed</small></div>
+          <div><b>Additional Bob proof</b><code>{evidence.additional_runtime_proof.sequence}</code><small>{evidence.additional_runtime_proof.evidence_reference} · {evidence.additional_runtime_proof.normal_tests} normal tests · {evidence.additional_runtime_proof.system_evaluator} invariants</small></div>
         </div>
       </details>
 

@@ -4,6 +4,11 @@ Start at the landing page. No technical setup or Bob session is required for
 the recorded visual replay. Click **Play 55-second Judge Demo** once. It resets
 to the parent context and advances through the recorded Bob handoff and result.
 
+This replay intentionally shows the primary partial-loss run (`2/3 → BLOCK`).
+The repository contains a separate full-manifest-loss Bob proof
+(`0/3 → BLOCK → 3/3 → ALLOW`) for technical review; do not mix its `7/7`
+result into this 55-second replay narrative.
+
 ## 0–6 seconds · Bob knows the rules
 
 “A developer asks Bob to rename a customer field during a rolling release.
