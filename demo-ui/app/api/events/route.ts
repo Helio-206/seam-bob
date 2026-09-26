@@ -12,6 +12,8 @@ type SafeEvent = {
   evidence_reference?: string[];
 };
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const response = (events: SafeEvent[]) => NextResponse.json(
     { mode: "live", events },
