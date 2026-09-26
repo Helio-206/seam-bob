@@ -22,6 +22,8 @@ from seam_discovery import (
     write_json,
     verify,
 )
+from seam_protocol import build_manifest, contract_sha256
+from seam_witness import receipt, witness
 
 
 def _json(path: Path) -> dict:
@@ -49,6 +51,14 @@ def main(argv: list[str] | None = None) -> int:
     inspect_parser = commands.add_parser("inspect", help="print a human-readable discovery and evidence report")
     inspect_parser.add_argument("--verified", type=Path, default=DEFAULT_VERIFIED)
     inspect_parser.add_argument("--evidence", type=Path, default=DEFAULT_EVIDENCE)
+    manifest_parser = commands.add_parser("manifest", help="build a proof-carrying handoff manifest")
+    manifest_parser.add_argument("--contract", type=Path, default=DEFAULT_COMPILED)
+    manifest_parser.add_argument("--verified", type=Path, default=DEFAULT_VERIFIED)
+    manifest_parser.add_argument("--output", type=Path, default=ROOT / ".semantic-boundary/generated/handoff-manifest.json")
+    witness_parser = commands.add_parser("witness", help="run executable outcome checks for a valid manifest")
+    witness_parser.add_argument("--contract", type=Path, default=DEFAULT_COMPILED)
+    witness_parser.add_argument("--manifest", type=Path, default=ROOT / ".semantic-boundary/generated/handoff-manifest.json")
+    witness_parser.add_argument("--output", type=Path, default=ROOT / ".semantic-boundary/witness/outcome-witness.json")
     args = parser.parse_args(argv)
 
     try:
@@ -74,6 +84,15 @@ def main(argv: list[str] | None = None) -> int:
             print(f"\nGate compatibility: {'YES' if compatible else 'NO'}")
             print(f"Output: {args.output}")
             return 0 if compatible else 2
+        elif args.command == "manifest":
+            result = build_manifest(_json(args.contract), _json(args.verified))
+            write_json(args.output, result)
+            print(f"MANIFEST {result['contract_id']} sha256:{result['contract_sha256']} → {args.output}")
+        elif args.command == "witness":
+            result = witness(ROOT, _json(args.manifest), _json(args.contract))
+            write_json(args.output, result)
+            print(receipt(result))
+            return 0 if result["handoff_integrity"] == result["outcome_integrity"] == "PASS" else 2
         else:
             print(inspect_report(_json(args.verified), _json(args.evidence)))
     except (OSError, ValueError, json.JSONDecodeError) as error:

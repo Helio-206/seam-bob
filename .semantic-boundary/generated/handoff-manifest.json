@@ -1,0 +1,19 @@
+{
+  "schema": "seam.handoff.v1",
+  "contract_id": "customer-field-migration",
+  "contract_sha256": "5d41b2b74116ac95e9dfcf0b03c994a0809ac2dfda2da554f591e47ab9012767",
+  "obligations": [
+    {
+      "id": "CLIENT_N_MINUS_ONE_PAYLOAD",
+      "evidence_status": "SUPPORTED"
+    },
+    {
+      "id": "ROLLING_N_N_PLUS_1_COMPAT",
+      "evidence_status": "SUPPORTED"
+    },
+    {
+      "id": "LIVE_N_WRITE_COMPAT",
+      "evidence_status": "PROVEN"
+    }
+  ]
+}

@@ -1,1 +1,14 @@
-Normal tests: 8/8
+> semantic-boundary-repeatability-lab@0.2.0 test
+> tsx --test tests/**/*.test.ts
+
+✔ creates and reads a customer
+✔ migration can run once without corrupting the current service
+✔ fullName input produces correct fullName and customerName output
+✔ getCustomer returns both fullName and customerName populated
+✔ migration is idempotent (run twice, service still works)
+✔ dual-write: both DB columns contain the correct value after createCustomer
+✔ LIVE_N_WRITE_COMPAT: row written by version N (customer_name only) still returns correct fullName
+✔ version-N service (no migration): createCustomer works against un-migrated DB
+ℹ tests 8
+ℹ pass 8
+ℹ fail 0

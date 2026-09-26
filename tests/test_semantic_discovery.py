@@ -20,6 +20,7 @@ from seam_discovery import (  # noqa: E402
     write_json,
     DeterministicRepositoryProvider,
 )
+from seam_protocol import build_manifest, render_manifest  # noqa: E402
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -115,7 +116,8 @@ class SemanticDiscoveryTests(unittest.TestCase):
     def test_generated_contract_runs_through_existing_gate(self) -> None:
         evidence = json.loads((ROOT / "evidence/boundary-summary.json").read_text(encoding="utf-8"))
         contract, _ = compile_contract(verify(discover(ROOT / "demo-workspace"), evidence))
-        description = """Migrate customer_name to full_name during rolling deployment. Preserve customer_name for old clients. N+1 supports previous mobile clients. N and N+1 coexist. N may write only customer_name after migration; N+1 reads customer_name when full_name is empty."""
+        manifest = build_manifest(contract, verify(discover(ROOT / "demo-workspace"), evidence))
+        description = """Migrate customer_name to full_name during rolling deployment.""" + "\n" + render_manifest(manifest)
         with tempfile.TemporaryDirectory() as directory:
             generated = Path(directory) / "compiled.json"
             desc = Path(directory) / "description.txt"

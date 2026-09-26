@@ -17,6 +17,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+ROOT_FOR_PROTOCOL = next(parent for parent in Path(__file__).resolve().parents if (parent / "scripts/seam_protocol.py").is_file())
+sys.path.insert(0, str(ROOT_FOR_PROTOCOL / "scripts"))
+from seam_protocol import extract_manifest, validate_manifest
+
 
 CONTRACT_ID = "customer-field-migration"
 TOOL_NAME = "spawn_subagent"
@@ -142,13 +146,20 @@ def evaluate(
         append_event(events_path, event)
         return 0, "SEMANTIC BOUNDARY ALLOWED\nContract not applicable to this handoff.", event
 
-    observed = [
-        item["id"]
-        for item in dependencies
-        if dependency_observed(description, item)
-    ]
-    missing = [item for item in required if item not in observed]
-    if not missing:
+    # Marker groups remain only for applicability and historical replay.  For an
+    # applicable new handoff, the manifest is the authoritative carriage proof.
+    try:
+        manifest = extract_manifest(description)
+        validation = validate_manifest(manifest, contract)
+    except ValueError as error:
+        validation = None
+        manifest_error = str(error)
+    else:
+        manifest_error = None
+    observed = validation.carried if validation else []
+    missing = validation.missing if validation else required
+    errors = validation.errors if validation else [manifest_error or "invalid manifest"]
+    if validation and validation.valid:
         event = decision_event(
             tool=tool,
             contract=contract,
@@ -157,13 +168,16 @@ def evaluate(
             observed=observed,
             missing=[],
             description=description,
-            evidence=["contract.marker_groups:all_required_groups_matched"],
+            evidence=["seam.handoff.v1:structural_manifest_valid"],
         )
         append_event(events_path, event)
         return 0, "SEMANTIC BOUNDARY ALLOWED\nObserved: " + ", ".join(observed), event
 
     by_id = {item["id"]: item for item in dependencies}
-    lines = ["SEMANTIC BOUNDARY BLOCKED", "", "Missing:"]
+    lines = ["SEMANTIC BOUNDARY BLOCKED", "", "Manifest errors:"]
+    for error in errors:
+        lines.append(f"- {error}")
+    lines.extend(["", "Missing:"])
     for dependency_id in missing:
         lines.append(f"- {dependency_id}")
     lines.extend(["", "Why it matters:"])
@@ -175,7 +189,7 @@ def evaluate(
             lines.append("Without dependency: 4/5 system invariants in 3/3 controlled runs.")
             lines.append("With dependency: 5/5 in 3/3 controlled runs.")
         else:
-            lines.append(f"Required deterministic marker groups were not all observed for {dependency_id}.")
+            lines.append(f"Required structured obligation was not carried for {dependency_id}.")
     lines.extend(["", "Required repair:"])
     for dependency_id in missing:
         lines.append(by_id[dependency_id]["remediation"])
@@ -188,7 +202,7 @@ def evaluate(
         observed=observed,
         missing=missing,
         description=description,
-        evidence=[f"contract.marker_groups:missing:{dependency_id}" for dependency_id in missing],
+        evidence=[f"seam.handoff.v1:invalid:{error}" for error in errors] + [f"seam.handoff.v1:missing:{dependency_id}" for dependency_id in missing],
     )
     append_event(events_path, event)
     return BLOCK_EXIT, "\n".join(lines), event

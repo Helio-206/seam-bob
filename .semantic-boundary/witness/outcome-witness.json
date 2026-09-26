@@ -1,0 +1,75 @@
+{
+  "schema": "seam.witness.v1",
+  "contract_id": "customer-field-migration",
+  "contract_sha256": "5d41b2b74116ac95e9dfcf0b03c994a0809ac2dfda2da554f591e47ab9012767",
+  "handoff_integrity": "PASS",
+  "outcome_integrity": "PASS",
+  "obligations": [
+    {
+      "id": "CLIENT_N_MINUS_ONE_PAYLOAD",
+      "carried": true,
+      "evidence_status": "SUPPORTED",
+      "postconditions": [
+        {
+          "id": "previous-mobile-payload",
+          "evaluator_check": "the immediately previous mobile payload remains accepted by N+1",
+          "status": "PASS"
+        }
+      ],
+      "fulfilled": true
+    },
+    {
+      "id": "ROLLING_N_N_PLUS_1_COMPAT",
+      "carried": true,
+      "evidence_status": "SUPPORTED",
+      "postconditions": [
+        {
+          "id": "frozen-n-after-migration",
+          "evaluator_check": "frozen version N still works after the N+1 migration",
+          "status": "PASS"
+        },
+        {
+          "id": "n-writes-n-plus-one-reads",
+          "evaluator_check": "N+1 reads a customer written by frozen N",
+          "status": "PASS"
+        },
+        {
+          "id": "n-plus-one-writes-n-reads",
+          "evaluator_check": "frozen N reads a customer written by N+1",
+          "status": "PASS"
+        },
+        {
+          "id": "preexisting-data",
+          "evaluator_check": "pre-existing customer data survives the migration",
+          "status": "PASS"
+        }
+      ],
+      "fulfilled": true
+    },
+    {
+      "id": "LIVE_N_WRITE_COMPAT",
+      "carried": true,
+      "evidence_status": "PROVEN",
+      "postconditions": [
+        {
+          "id": "live-n-write-read",
+          "evaluator_check": "N+1 reads a customer written by frozen N",
+          "status": "PASS"
+        }
+      ],
+      "fulfilled": true
+    }
+  ],
+  "normal_tests": {
+    "status": "PASS",
+    "passed": 8,
+    "total": 8,
+    "output": "\n> semantic-boundary-repeatability-lab@0.2.0 test\n> tsx --test tests/**/*.test.ts\n\n✔ creates and reads a customer (1.313046ms)\n✔ migration can run once without corrupting the current service (0.215081ms)\n✔ fullName input produces correct fullName and customerName output (0.152694ms)\n✔ getCustomer returns both fullName and customerName populated (0.153035ms)\n✔ migration is idempotent (run twice, service still works) (0.178202ms)\n✔ dual-write: both DB columns contain the correct value after createCustomer (0.174495ms)\n✔ LIVE_N_WRITE_COMPAT: row written by version N (customer_name only) still returns correct fullName (0.174956ms)\n✔ version-N service (no migration): createCustomer works against un-migrated DB (0.180687ms)\nℹ tests 8\nℹ suites 0\nℹ pass 8\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 125.590026\n"
+  },
+  "system_evaluator": {
+    "status": "PASS",
+    "passed": 5,
+    "total": 5,
+    "output": "✔ frozen version N still works after the N+1 migration (1.155402ms)\n✔ N+1 reads a customer written by frozen N (0.259563ms)\n✔ frozen N reads a customer written by N+1 (0.16619ms)\n✔ the immediately previous mobile payload remains accepted by N+1 (0.130393ms)\n✔ pre-existing customer data survives the migration (0.167632ms)\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 18.499757\n"
+  }
+}

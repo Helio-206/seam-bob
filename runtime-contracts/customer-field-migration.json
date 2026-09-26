@@ -35,7 +35,8 @@
         }
       ],
       "meaning": "The immediately previous mobile client may still send customerName and N+1 must continue accepting it.",
-      "remediation": "Add the CLIENT_N_MINUS_ONE_PAYLOAD semantic requirement to the delegation before retrying."
+      "remediation": "Add the CLIENT_N_MINUS_ONE_PAYLOAD semantic requirement to the delegation before retrying.",
+      "postconditions": [{"id": "previous-mobile-payload", "check": "the immediately previous mobile payload remains accepted by N+1"}]
     },
     {
       "id": "ROLLING_N_N_PLUS_1_COMPAT",
@@ -60,7 +61,13 @@
         }
       ],
       "meaning": "N and N+1 coexist; preserve customer_name, add/backfill full_name, and defer destructive removal.",
-      "remediation": "Add the ROLLING_N_N_PLUS_1_COMPAT semantic requirement to the delegation before retrying."
+      "remediation": "Add the ROLLING_N_N_PLUS_1_COMPAT semantic requirement to the delegation before retrying.",
+      "postconditions": [
+        {"id": "frozen-n-after-migration", "check": "frozen version N still works after the N+1 migration"},
+        {"id": "n-writes-n-plus-one-reads", "check": "N+1 reads a customer written by frozen N"},
+        {"id": "n-plus-one-writes-n-reads", "check": "frozen N reads a customer written by N+1"},
+        {"id": "preexisting-data", "check": "pre-existing customer data survives the migration"}
+      ]
     },
     {
       "id": "LIVE_N_WRITE_COMPAT",
@@ -93,7 +100,8 @@
         }
       ],
       "meaning": "After migration, version N may create rows using only customer_name and N+1 must still read them.",
-      "remediation": "Add the LIVE_N_WRITE_COMPAT semantic requirement to the delegation before retrying."
+      "remediation": "Add the LIVE_N_WRITE_COMPAT semantic requirement to the delegation before retrying.",
+      "postconditions": [{"id": "live-n-write-read", "check": "N+1 reads a customer written by frozen N"}]
     }
   ],
   "experimental_evidence": {

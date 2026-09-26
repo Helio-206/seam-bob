@@ -4,7 +4,7 @@
 
 > Bob knew the requirement. The handoff lost it.
 
-**Discover → Prove → Compile → Enforce**
+**Discover → Prove → Compile → Carry → Enforce → Witness**
 
 > Discover what must survive delegation. Prove it. Enforce it.
 
@@ -12,6 +12,21 @@ Repository context → candidate semantic dependencies → controlled counterfac
 
 AI agents can understand a critical requirement and still lose it when they
 delegate work. SEAM catches that loss before the subagent executes.
+
+## Proof-Carrying Delegation
+
+A SEAM handoff carries a machine-readable manifest containing contract identity,
+an integrity/version digest, required obligations, and evidence status. PreToolUse
+structurally verifies that manifest before Bob runs `spawn_subagent`; natural-language
+keywords alone are insufficient. After work exists, the Outcome Witness runs the
+mapped executable checks and produces a receipt with separate **HANDOFF INTEGRITY**
+and **OUTCOME INTEGRITY** verdicts.
+
+Know what matters. Make sure it reaches the next agent. Then prove the resulting
+work respected it. The migration is the experimental fixture, not the product:
+SEAM verifies semantic continuity across an agent-to-agent handoff. See
+[`docs/proof-carrying-delegation.md`](docs/proof-carrying-delegation.md) and run
+`npm run seam:proof-demo` (a local deterministic protocol demo; it does not invoke Bob).
 
 ## The problem
 
@@ -127,7 +142,14 @@ The runtime contract lives in `runtime-contracts/`, outside
 the project. The hook receives the proven Bob input schema and resolves the
 contract through `SEMANTIC_BOUNDARY_CONTRACT_PATH`.
 
-The current prototype uses deterministic marker groups for three dependencies:
+The current discovery provider is deterministic and workflow-specific. The runtime
+handoff protocol validates a structured manifest; it does not claim to understand
+arbitrary natural language. Pre-execution validation proves an obligation was
+carried, not that implementation is correct; outcome integrity is evaluated
+separately through executable tests and the external system evaluator.
+
+The current prototype uses deterministic marker groups for applicability/routing
+and historical replay, and structured manifests for primary carriage validation:
 
 - `CLIENT_N_MINUS_ONE_PAYLOAD`: the previous mobile client may still send `customerName`.
 - `ROLLING_N_N_PLUS_1_COMPAT`: N and N+1 coexist; preserve `customer_name`, add/backfill `full_name`, and defer destructive removal.
