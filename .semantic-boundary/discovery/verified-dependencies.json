@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "workflow": "customer-field-migration",
+  "generated_at": "2026-09-26T02:17:43.354334+00:00",
+  "evidence": "evidence/boundary-summary.json",
+  "dependencies": [
+    {
+      "id": "CLIENT_N_MINUS_ONE_PAYLOAD",
+      "statement": "N+1 must continue accepting customerName from the immediately previous mobile client.",
+      "sources": [
+        {
+          "path": "docs/client-support.md",
+          "evidence": "L6: previous mobile client release. The previous mobile client may remain active"
+        },
+        {
+          "path": "docs/client-support.md",
+          "evidence": "L15: \"customerName\": \"Ada Lovelace\""
+        },
+        {
+          "path": "docs/client-support.md",
+          "evidence": "L19: must not turn that still-supported payload into a server error"
+        }
+      ],
+      "discovery_rationale": "The support window retains the previous client and its legacy payload, and the policy forbids rejecting that supported request.",
+      "provenance": {
+        "facts": [
+          "previous_client_payload",
+          "legacy_client_payload_field",
+          "previous_payload_accepted"
+        ],
+        "derivation": "The support window retains the previous client and its legacy payload, and the policy forbids rejecting that supported request."
+      },
+      "confidence": "HIGH",
+      "status": "SUPPORTED",
+      "verification": {
+        "evidence_type": "REPOSITORY_CONSTRAINT",
+        "evidence_scope": "source-supported requirement; no isolated counterfactual evidence supplied",
+        "reason": "Repository policy supports this dependency, but the available ablation isolates only LIVE_N_WRITE_COMPAT."
+      }
+    },
+    {
+      "id": "ROLLING_N_N_PLUS_1_COMPAT",
+      "statement": "During rolling deployment, preserve customer_name while adding/backfilling full_name; defer destructive removal until N is drained.",
+      "sources": [
+        {
+          "path": "infra/rollout-policy.md",
+          "evidence": "L5: version N and backend version N+1 may serve traffic simultaneously"
+        },
+        {
+          "path": "infra/rollout-policy.md",
+          "evidence": "L11: For destructive schema changes use expand/contract: 1. Expand without removing the representation required by N. 2. Deploy N+1 so it can coexist with N. 3. Backfill or dual-write as required. 4. Remove the legacy representation only in a later release"
+        },
+        {
+          "path": "migrations/002-customer-full-name.ts",
+          "evidence": "L6: db.addColumn(\"full_name\")"
+        }
+      ],
+      "discovery_rationale": "Simultaneous N/N+1 traffic plus expand/contract and the full_name migration require both schema representations during rollout.",
+      "provenance": {
+        "facts": [
+          "version_coexistence",
+          "expand_contract",
+          "migration_adds_full_name"
+        ],
+        "derivation": "Simultaneous N/N+1 traffic plus expand/contract and the full_name migration require both schema representations during rollout."
+      },
+      "confidence": "HIGH",
+      "status": "SUPPORTED",
+      "verification": {
+        "evidence_type": "REPOSITORY_CONSTRAINT",
+        "evidence_scope": "source-supported requirement; no isolated counterfactual evidence supplied",
+        "reason": "Repository policy supports this dependency, but the available ablation isolates only LIVE_N_WRITE_COMPAT."
+      }
+    },
+    {
+      "id": "LIVE_N_WRITE_COMPAT",
+      "statement": "N+1 must read rows created during rollout by N with customer_name populated and full_name absent.",
+      "sources": [
+        {
+          "path": "infra/rollout-policy.md",
+          "evidence": "L5: version N and backend version N+1 may serve traffic simultaneously"
+        },
+        {
+          "path": "evaluator/frozen-vN/legacy-customer-service.ts",
+          "evidence": "L12: createCustomer(customerName: string): { id: string; customerName: string } { const row = this.db.insert({ customer_name: customerName, })"
+        },
+        {
+          "path": "migrations/002-customer-full-name.ts",
+          "evidence": "L6: db.addColumn(\"full_name\")"
+        },
+        {
+          "path": "src/customer-service.ts",
+          "evidence": "L37: readColumn(id, \"customer_name\")"
+        }
+      ],
+      "discovery_rationale": "N and N+1 coexist; the N creation path writes customer_name and inserts rows; the migration adds full_name; therefore live legacy-only rows can be created after migration and the N+1 reader must tolerate them.",
+      "provenance": {
+        "facts": [
+          "version_coexistence",
+          "version_n_writes_legacy_field",
+          "migration_adds_full_name",
+          "reader_falls_back_to_legacy_field"
+        ],
+        "derivation": "N and N+1 coexist; the N creation path writes customer_name and inserts rows; the migration adds full_name; therefore live legacy-only rows can be created after migration and the N+1 reader must tolerate them."
+      },
+      "confidence": "HIGH",
+      "status": "PROVEN",
+      "verification": {
+        "evidence_type": "CONTROLLED_BOUNDARY_ABLATION",
+        "evidence_scope": "relevance in this controlled customer-field-migration workflow",
+        "without_dependency": [
+          "4/5",
+          "4/5",
+          "4/5"
+        ],
+        "with_dependency": [
+          "5/5",
+          "5/5",
+          "5/5"
+        ],
+        "reason": "Across three valid paired runs, removing this dependency produced 4/5 while adding it produced 5/5.",
+        "valid_runs": "6/6"
+      }
+    }
+  ]
+}

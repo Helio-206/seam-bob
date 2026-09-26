@@ -17,6 +17,8 @@ node_modules/
 dist/
 coverage/
 *.tsbuildinfo
+__pycache__/
+*.py[cod]
 
 # Local runtime state
 work/

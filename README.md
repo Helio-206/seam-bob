@@ -4,6 +4,12 @@
 
 > Bob understood the system. The first handoff did not.
 
+**Discover → Prove → Compile → Enforce**
+
+> Discover what must survive delegation. Prove it. Enforce it.
+
+Repository context → candidate semantic dependencies → controlled counterfactual evidence → compiled contract → Bob `PreToolUse` → **BLOCK / REPAIR / ALLOW**
+
 SEAM prevents AI coding agents from losing critical system requirements when
 they delegate work to subagents.
 
@@ -17,6 +23,20 @@ subagent can therefore produce locally correct code that is globally unsafe.
 SEAM places a deterministic semantic gate at the `spawn_subagent` boundary.
 It checks a compiled contract before the delegated work executes and returns
 precise repair feedback when a dependency is missing.
+
+Traditional contract enforcement starts after a policy is known. SEAM adds an
+earlier evidence layer: identify candidate semantics, connect them to
+correctness evidence, then compile evidence-backed dependencies into the
+enforceable boundary contract. Discovery proposes what might matter;
+counterfactual evidence determines what actually mattered.
+
+## Why not just a policy engine?
+
+A policy engine assumes the policy is already known. SEAM separates three
+questions: what semantic dependency may matter, what evidence shows that it
+affects downstream correctness, and how to enforce it at delegation time. In
+the demonstrated workflow, `LIVE_N_WRITE_COMPAT` was isolated through
+controlled boundary ablation before it was enforced.
 
 ## Result
 
@@ -48,6 +68,14 @@ network access, or credentials. The `LIVE` tab reads sanitized decisions from
 ## Architecture
 
 ```text
+Repository context
+      ↓
+Deterministic fact extraction → candidate dependencies
+      ↓
+Controlled evidence verification → SUPPORTED / PROVEN
+      ↓
+Contract compiler
+      ↓
 Developer task
       ↓
 IBM Bob parent agent
@@ -58,10 +86,25 @@ PreToolUse hook
       ↓
 SEAM semantic boundary gate
       ↓
-compiled contract outside Bob workspace
-      ↓
-ALLOW / BLOCK
+ALLOW / BLOCK → repair and retry
 ```
+
+The current discovery rules inspect the migration's client support policy,
+rollout policy, migration, and customer service. They derive C and R from
+source constraints, and derive L from the composition of N/N+1 coexistence,
+the N write path, the new column migration, and the legacy reader fallback.
+The existing controlled ablation is the only evidence that classifies a
+candidate as `PROVEN`; C and R remain `SUPPORTED`.
+
+Try the deterministic end-to-end demo:
+
+```bash
+npm run seam:discover
+```
+
+Or run its stages independently with `python3 scripts/seam.py discover`,
+`verify`, `compile`, and `inspect`. Details and limitations are in
+[`docs/semantic-discovery.md`](docs/semantic-discovery.md).
 
 The runtime contract lives in `runtime-contracts/`, outside
 `demo-workspace/`. Bob's normal repository tools cannot discover it by browsing

@@ -161,13 +161,24 @@ export default function Home() {
         <div className="hero-kicker"><span className="kicker-line" /> agent handoff / customer migration</div>
         <h1>Where requirements cross,<br /><em>safety is decided.</em></h1>
         <div className="hero-bottom">
-          <p>Bob understood the system. The first handoff did not. SEAM checks whether the semantics required for downstream correctness survive delegation.</p>
+          <p>Bob understood the system. The first handoff did not. Discover what must survive delegation. Prove it. Enforce it.</p>
           <button className="replay-cta" type="button" onClick={replay} disabled={isReplaying || mode === "live"}>
             <Play size={15} fill="currentColor" />
             {isReplaying ? "Replaying verified run" : "Replay verified run"}
             <ArrowRight size={16} />
           </button>
         </div>
+      </section>
+
+      <section className="discovery-strip" aria-label="Discover, prove and compile the semantic contract">
+        <div className="discovery-title"><span className="section-number">00</span><div><b>DISCOVER → PROVE → COMPILE</b><small>Evidence-backed dependencies before enforcement</small></div></div>
+        <div className="discovery-signals">
+          <div className="discovery-signal"><span>client-support.md</span><b>C</b><small>previous client payload</small></div>
+          <div className="discovery-signal"><span>rollout-policy.md</span><b>R</b><small>N / N+1 coexist</small></div>
+          <div className="discovery-signal discovery-signal--live"><span>coexistence + N writer</span><b>L</b><small>live legacy writes possible</small></div>
+        </div>
+        <div className="discovery-proof"><div><span>WITHOUT L</span><b>4/5 × 3</b></div><div><span>WITH L</span><b>5/5 × 3</b></div><strong>PROVEN<br /><small>this workflow</small></strong></div>
+        <div className="discovery-compile"><span>COMPILE</span><b>semantic contract</b><ArrowRight size={15} /></div>
       </section>
 
       <section className="mission-strip" aria-label="Current task">

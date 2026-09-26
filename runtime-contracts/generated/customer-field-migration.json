@@ -1,0 +1,181 @@
+{
+  "contract_id": "customer-field-migration",
+  "name": "Customer-field migration semantic boundary",
+  "applies_when": {
+    "all_of": [
+      "\\bcustomer\\s*name\\b",
+      "\\bcustomer_name\\b",
+      "\\bfull_name\\b"
+    ],
+    "any_of": [
+      "\\bmigrat\\w*\\b",
+      "\\brolling\\b",
+      "\\bcoexist\\w*\\b",
+      "\\bcustomer\\s+field\\b",
+      "\\bcustomer\\s+service\\b"
+    ]
+  },
+  "dependencies": [
+    {
+      "id": "CLIENT_N_MINUS_ONE_PAYLOAD",
+      "name": "Previous mobile client payload compatibility",
+      "source": "docs/client-support.md",
+      "marker_groups": [
+        {
+          "id": "legacy_payload_field",
+          "any_of": [
+            "\\bcustomer\\s*name\\b",
+            "\\bcustomer_name\\b"
+          ]
+        },
+        {
+          "id": "previous_client_context",
+          "any_of": [
+            "\\bmobile\\b",
+            "\\blegacy\\b",
+            "previous client",
+            "old client",
+            "n-1"
+          ]
+        },
+        {
+          "id": "acceptance",
+          "any_of": [
+            "accept\\w*",
+            "support\\w*",
+            "continue\\w*",
+            "backward[- ]compatible",
+            "compatible"
+          ]
+        }
+      ],
+      "meaning": "The immediately previous mobile client may still send customerName and N+1 must continue accepting it.",
+      "remediation": "Add the CLIENT_N_MINUS_ONE_PAYLOAD semantic requirement to the delegation before retrying."
+    },
+    {
+      "id": "ROLLING_N_N_PLUS_1_COMPAT",
+      "name": "Rolling N/N+1 schema compatibility",
+      "source": "infra/rollout-policy.md",
+      "marker_groups": [
+        {
+          "id": "rolling_coexistence",
+          "any_of": [
+            "rolling\\s+deployment",
+            "coexist\\w*",
+            "overlap",
+            "version\\s*n.{0,80}n\\s*\\+\\s*1",
+            "n\\s*\\+\\s*1.{0,80}version\\s*n"
+          ]
+        },
+        {
+          "id": "preserve_customer_name",
+          "any_of": [
+            "preserv\\w*.{0,80}customer_name",
+            "keep\\w*.{0,80}customer_name",
+            "customer_name.{0,80}(?:remain|preserv)",
+            "(?:do not|never)\\s+(?:drop|remove|rename).{0,80}customer_name"
+          ]
+        },
+        {
+          "id": "add_backfill_full_name",
+          "any_of": [
+            "(?:add|backfill|copy|introduc\\w*).{0,80}full_name",
+            "full_name.{0,80}(?:add|backfill|copy)"
+          ]
+        },
+        {
+          "id": "defer_destructive_removal",
+          "any_of": [
+            "(?:later|future)\\s+release",
+            "defer\\w*.{0,80}(?:drop|remove|destruct|rename)",
+            "(?:do not|never)\\s+(?:drop|remove|rename)",
+            "destructive\\s+removal.{0,80}(?:later|future|defer)"
+          ]
+        }
+      ],
+      "meaning": "N and N+1 coexist; preserve customer_name, add/backfill full_name, and defer destructive removal.",
+      "remediation": "Add the ROLLING_N_N_PLUS_1_COMPAT semantic requirement to the delegation before retrying."
+    },
+    {
+      "id": "LIVE_N_WRITE_COMPAT",
+      "name": "Live version-N write compatibility",
+      "source": "experiments/boundary-ablation/summary-v2.json",
+      "marker_groups": [
+        {
+          "id": "version_n_or_legacy_writer",
+          "any_of": [
+            "\\bversion\\s*-?\\s*n\\b",
+            "\\bfrozen\\s+version\\b",
+            "\\blegacy\\s+version\\b",
+            "\\bold\\s+version\\b",
+            "\\bprevious\\s+version\\b"
+          ]
+        },
+        {
+          "id": "write_or_create_rows",
+          "any_of": [
+            "\\bwrite\\w*\\b",
+            "\\binsert\\w*\\b",
+            "\\bcreat(?:e|es|ed|ing)\\b",
+            "\\bpopulat\\w*\\b"
+          ]
+        },
+        {
+          "id": "customer_name_only_or_full_name_empty",
+          "any_of": [
+            "\\b(?:write|insert|creat|populat)\\w*\\b.{0,120}\\bonly\\b.{0,40}\\bcustomer_name\\b",
+            "\\bonly\\s+customer_name\\b",
+            "\\bcustomer_name\\b.{0,80}\\b(?:leaving|with|when|while)\\b.{0,50}\\bfull_name\\b.{0,30}\\b(?:empty|absent|blank|missing)\\b"
+          ]
+        },
+        {
+          "id": "n_plus_1_reader",
+          "any_of": [
+            "\\bn\\s*\\+\\s*1\\b",
+            "\\bcurrent\\s+(?:service|version|reader)\\b",
+            "\\bgetcustomer\\b",
+            "\\bread\\w*\\b.{0,100}\\bfull_name\\b"
+          ]
+        },
+        {
+          "id": "legacy_read_fallback",
+          "any_of": [
+            "\\bfallback\\b",
+            "\\bfall\\s+back\\b",
+            "\\bread\\w*\\b.{0,100}\\bcustomer_name\\b",
+            "\\bcustomer_name\\b.{0,100}\\bread\\w*\\b"
+          ]
+        },
+        {
+          "id": "full_name_absent_or_empty",
+          "any_of": [
+            "\\bfull_name\\b.{0,40}\\b(?:empty|absent|blank|missing)\\b",
+            "\\b(?:empty|absent|blank|missing)\\b.{0,40}\\bfull_name\\b"
+          ]
+        }
+      ],
+      "meaning": "After migration, version N may create rows using only customer_name and N+1 must still read them.",
+      "remediation": "Add the LIVE_N_WRITE_COMPAT semantic requirement to the delegation before retrying."
+    }
+  ],
+  "experimental_evidence": {
+    "boundary_l0": {
+      "system_evaluator": "4/5",
+      "runs": [
+        "repeat-01",
+        "repeat-02",
+        "repeat-03"
+      ]
+    },
+    "boundary_l1": {
+      "system_evaluator": "5/5",
+      "runs": [
+        "repeat-01",
+        "repeat-02",
+        "repeat-03"
+      ]
+    },
+    "valid_boundary_runs": "6/6",
+    "controlled_difference": "The actual L0/L1 delegation payloads differed only by L."
+  }
+}

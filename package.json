@@ -9,6 +9,7 @@
     "build": "npm run build --prefix demo-ui",
     "lint": "npm run lint --prefix demo-ui",
     "typecheck": "npm run typecheck --prefix demo-ui",
-    "test": "npm test --prefix demo-workspace"
+    "test": "npm test --prefix demo-workspace",
+    "seam:discover": "bash scripts/demo-discovery.sh"
   }
 }
