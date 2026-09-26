@@ -1,64 +1,72 @@
-# Demo script — 60–90 seconds
+# Judge Demo — approximately 55 seconds
 
-## 0–10 seconds
+Start at the landing page. No technical setup or Bob session is required for
+the recorded visual replay. Click **Play 55-second Judge Demo** once. It resets
+to the parent context and advances through the recorded Bob handoff and result.
 
-“This migration looks simple: rename `customerName` to `fullName`.”
+## 0–6 seconds · Bob knows the rules
 
-Show the task title and the three dependency cards.
+“A developer asks Bob to rename a customer field during a rolling release.
+Bob knows three rules that must survive the handoff.”
 
-## 10–20 seconds
+Point to the three plain-English requirements in **Parent Knows**.
 
-“But during rollout, old mobile clients and version N are still active.”
+## 6–13 seconds · Bob delegates
 
-Point to C, R, and L. Emphasize that L is about live writes after migration.
+“Bob sends the migration task to a focused subagent. One critical rule does
+not arrive.”
 
-## 20–35 seconds
+Point to **Old version still writes data** marked **Lost in handoff**. The
+identifier `LIVE_N_WRITE_COMPAT` is available as the secondary label.
 
-Click **Replay verified run**.
+## 13–20 seconds · SEAM blocks
 
-The center panel shows `spawn_subagent`, then:
+“SEAM checks Bob’s actual delegation call before the subagent starts. Only two
+of three requirements survived, so SEAM blocks the call.”
 
-```text
-C ✓   R ✓   L ✕
-SEMANTIC BOUNDARY BLOCKED
-```
+Show the `spawn_subagent` boundary and **BLOCK · 1 critical requirement
+missing**. This is the recorded Bob IDE event.
 
-Say: “SEAM intercepts the handoff before the subagent runs.”
+## 20–27 seconds · Bob repairs
 
-## 35–45 seconds
+“Bob receives the missing requirement, repairs the handoff, and retries.”
 
-“Bob understood most of the system, but this critical requirement did not
-survive the handoff.”
+The demo changes to **Bob repairs and retries**. The replay depicts the
+recorded repair; it does not call Bob or create a new runtime event.
 
-Show the missing `LIVE_N_WRITE_COMPAT` message and the evidence card.
+## 27–34 seconds · The work continues
 
-## 45–60 seconds
+“All three requirements now arrive. SEAM allows the retry, and implementation
+continues.”
 
-The replay advances to repair and retry:
+Show **3 / 3 → ALLOW**.
 
-```text
-C ✓   R ✓   L ✓
-DELEGATION ALLOWED
-```
+## 34–41 seconds · The recorded result
 
-“Bob receives the feedback, repairs the delegation, and retries.”
+“The completed run passed all eight normal tests and all five system
+invariants.”
 
-## 60–75 seconds
+Show **8/8** and **5/5**.
 
-Show the downstream result:
+## 41–48 seconds · Why that rule mattered
 
-```text
-Normal tests       8 / 8
-System invariants  5 / 5
-```
+“During rollout, the old version still writes customer data. If the new
+version stops reading it, new data can be missed. In the controlled
+comparison, this requirement moved correctness from 4/5 to 5/5 in each of
+three runs.”
 
-## 75–90 seconds
+The static page also shows the ablation and old-writer → new-reader
+consequence chain for judges who want the details.
 
-Show the controlled evidence:
+## 48–55 seconds · Close
 
-```text
-Without L: 4/5 × 3
-With L:    5/5 × 3
-```
+Close with: “Coding agents review code. SEAM reviews what one agent tells
+another.” Add: “This is evidence for one controlled workflow, not a universal
+safety guarantee.”
 
-Close with: “SEAM verifies the boundary before delegated work executes.”
+## If asked why IBM Bob
+
+“Bob Agent mode delegates focused work to subagents with isolated context.
+SEAM uses Bob’s real `PreToolUse` hook to inspect and block `spawn_subagent`
+before execution. Bob gets the repair feedback and can retry. Isolation keeps
+the subagent focused; SEAM helps the required meaning survive.”

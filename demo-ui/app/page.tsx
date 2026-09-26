@@ -1,71 +1,133 @@
 "use client";
 
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
 import {
+  ArrowDown,
   ArrowRight,
   Check,
   CircleAlert,
-  GitBranch,
+  FileCheck2,
   Play,
   Radio,
   ShieldCheck,
   Wrench,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import evidence from "../data/verified-run.json";
 
-gsap.registerPlugin(useGSAP);
+type Phase = "knows" | "blocked" | "repairing" | "allowed" | "results" | "evidence" | "closing";
+type Mode = "judge" | "live";
 
-type Phase = "blocked" | "repairing" | "allowed";
-type Mode = "replay" | "live";
+const semanticCopy: Record<string, { plain: string; short: string }> = {
+  C: { plain: "Old mobile clients still work", short: "previous client payload" },
+  R: { plain: "Old and new versions coexist", short: "rolling version overlap" },
+  L: { plain: "The old version still writes data", short: "live legacy writes" },
+};
 
-const timeline = [
-  ["01", "Read context"],
-  ["02", "Compile handoff"],
-  ["03", "Boundary check"],
-  ["04", "Repair"],
-  ["05", "Verify 5/5"],
-] as const;
+const demoSteps: Array<{ phase: Phase; caption: string; duration: number }> = [
+  { phase: "knows", caption: "Bob starts with three critical rollout rules.", duration: 6000 },
+  { phase: "blocked", caption: "Bob delegates the migration. One requirement fails to cross the handoff.", duration: 7000 },
+  { phase: "blocked", caption: "SEAM blocks the real delegation before the subagent runs.", duration: 7000 },
+  { phase: "repairing", caption: "Bob receives the missing requirement and repairs the handoff.", duration: 7000 },
+  { phase: "allowed", caption: "Bob retries. All three requirements arrive; the handoff is allowed.", duration: 7000 },
+  { phase: "results", caption: "The recorded implementation finishes: 8/8 normal tests and 5/5 system invariants.", duration: 7000 },
+  { phase: "evidence", caption: "The old version still writes data. In three controlled runs, this requirement moved correctness from 4/5 to 5/5.", duration: 7000 },
+  { phase: "closing", caption: "Coding agents review code. SEAM reviews what one agent tells another.", duration: 7000 },
+];
 
-function dependencyStatus(id: string, phase: Phase) {
-  return id === "L" ? phase === "allowed" : true;
+const dependencyRows = evidence.dependencies.map((dependency) => ({
+  ...dependency,
+  plain: semanticCopy[dependency.id]?.plain ?? dependency.detail,
+  short: semanticCopy[dependency.id]?.short ?? dependency.id,
+}));
+const lostId = evidence.replay.missing[0];
+
+function StatusIcon({ ok }: { ok: boolean }) {
+  return ok ? <span className="diff-icon diff-icon--ok" aria-label="present"><Check size={14} /></span>
+    : <span className="diff-icon diff-icon--lost" aria-label="missing"><X size={14} /></span>;
 }
-function StatusMark({ ok }: { ok: boolean }) {
-  return ok ? (
-    <span className="status-mark status-mark--ok" aria-label="present">
-      <Check size={13} strokeWidth={2.8} />
-    </span>
-  ) : (
-    <span className="status-mark status-mark--missing" aria-label="missing">
-      <X size={13} strokeWidth={2.8} />
-    </span>
+
+function SemanticHandoffDiff({ phase }: { phase: Phase }) {
+  const isBeforeSend = phase === "knows";
+  const repaired = ["allowed", "results", "evidence", "closing"].includes(phase);
+  const decision = phase === "blocked" ? "BLOCK" : repaired ? "ALLOW" : "WAITING";
+
+  return (
+    <section className="handoff-card" aria-label="Semantic handoff comparison">
+      <div className="diff-head">
+        <div><span>01 / SOURCE</span><h2>PARENT KNOWS</h2></div>
+        <div className="diff-center-label">SEAM FIREWALL</div>
+        <div><span>02 / RECEIVER</span><h2>SUBAGENT RECEIVES</h2></div>
+      </div>
+      <div className="diff-rows">
+        {dependencyRows.map((item) => {
+          const wasLost = item.name === lostId && !repaired && !isBeforeSend;
+          const delivered = !isBeforeSend && !wasLost;
+          return (
+            <div className={"diff-row " + (wasLost ? "diff-row--lost" : "")} key={item.id}>
+              <div className="diff-parent">
+                <StatusIcon ok />
+                <div><strong>{item.plain}</strong><small>{item.name}</small></div>
+              </div>
+              <div className="diff-crossing" aria-hidden="true"><span /><ArrowRight size={17} /></div>
+              <div className={"diff-received " + (wasLost ? "diff-received--lost" : "")}>
+                {isBeforeSend ? <span className="not-sent">not sent yet</span> : <><StatusIcon ok={delivered} /><strong>{wasLost ? "LOST IN HANDOFF" : "preserved"}</strong></>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className={"firewall-verdict firewall-verdict--" + decision.toLowerCase()}>
+        <span className="firewall-mark">SEAM</span>
+        <span className="firewall-line" />
+        <span className="firewall-decision">{decision === "BLOCK" ? <><CircleAlert size={17} /> BLOCK · 1 critical requirement missing</> : decision === "ALLOW" ? <><ShieldCheck size={17} /> ALLOW · all critical semantics survived</> : <>Waiting for Bob to delegate</>}</span>
+      </div>
+      <div className="diff-totals" aria-live="polite">
+        {isBeforeSend ? <><b>3 critical rules</b><span>Bob knows them before delegation</span></> : repaired
+          ? <><b>3 / 3 survived → ALLOW</b><span>Bob repaired the handoff and retried</span></>
+          : <><b>2 / 3 survived → BLOCK</b><span>The subagent would miss a release-critical requirement</span></>}
+      </div>
+    </section>
+  );
+}
+
+function SemanticReceipt({ phase, mode }: { phase: Phase; mode: Mode }) {
+  const allowed = ["allowed", "results", "evidence", "closing"].includes(phase);
+  const visible = !["knows"].includes(phase);
+  if (!visible) return null;
+  const required = dependencyRows.map((item) => item.name);
+  const missing = allowed ? [] : [lostId];
+  const observed = required.filter((id) => !missing.includes(id));
+  const receipt = {
+    tool: "spawn_subagent",
+    required_dependencies: required,
+    observed_dependencies: observed,
+    missing_dependencies: missing,
+    decision: allowed ? "ALLOW" : "BLOCK",
+  };
+
+  return (
+    <section className="receipt" aria-label="Semantic receipt generated from the recorded handoff">
+      <div className="receipt-heading"><FileCheck2 size={16} /><strong>SEMANTIC RECEIPT</strong><span>{mode === "live" ? "local gate event" : "recorded Bob IDE handoff"}</span></div>
+      <pre>{JSON.stringify(receipt, null, 2)}</pre>
+    </section>
   );
 }
 
 export default function Home() {
-  const rootRef = useRef<HTMLElement>(null);
-  const routeRef = useRef<HTMLDivElement>(null);
-  const repairRouteRef = useRef<HTMLDivElement>(null);
-  const liveTokenRef = useRef<HTMLDivElement>(null);
-  const blockRef = useRef<HTMLDivElement>(null);
-  const repairRef = useRef<HTMLDivElement>(null);
-  const allowRef = useRef<HTMLDivElement>(null);
-  const [mode, setMode] = useState<Mode>("replay");
+  const [mode, setMode] = useState<Mode>("judge");
   const [phase, setPhase] = useState<Phase>("blocked");
+  const [demoStep, setDemoStep] = useState<number | null>(null);
   const [isReplaying, setIsReplaying] = useState(false);
-  const [liveMessage, setLiveMessage] = useState("Waiting for local boundary events…");
+  const [liveMessage, setLiveMessage] = useState("Waiting for local Bob boundary events…");
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  const { contextSafe } = useGSAP(() => {
-    gsap.set(routeRef.current, { scaleX: 1, transformOrigin: "left center" });
-    gsap.set(repairRouteRef.current, { scaleX: 0, transformOrigin: "left center" });
-    gsap.set(liveTokenRef.current, { y: 0 });
-    gsap.set([blockRef.current, repairRef.current, allowRef.current], { autoAlpha: 0, y: 8 });
-  }, { scope: rootRef });
+  const clearTimers = useCallback(() => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+  }, []);
 
-  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
 
   useEffect(() => {
     if (mode !== "live") return;
@@ -75,21 +137,17 @@ export default function Home() {
         const response = await fetch("/api/events", { cache: "no-store" });
         const payload = await response.json() as { events?: Array<{ decision?: string; missing_dependencies?: string[] }> };
         if (!active) return;
-        const events = payload.events ?? [];
-        const lastSpawn = [...events].reverse().find((event) => event.decision === "BLOCK" || event.decision === "ALLOW");
-        if (!lastSpawn) {
+        const event = [...(payload.events ?? [])].reverse().find((item) => item.decision === "BLOCK" || item.decision === "ALLOW");
+        if (!event) {
           setLiveMessage("No spawn_subagent decision recorded yet.");
           return;
         }
-        if (lastSpawn.decision === "BLOCK") {
-          setPhase("blocked");
-          setLiveMessage("Blocked · missing " + ((lastSpawn.missing_dependencies ?? []).join(", ") || "dependency"));
-        } else {
-          setPhase("allowed");
-          setLiveMessage("Allowed · all required dependencies observed");
-        }
+        setPhase(event.decision === "BLOCK" ? "blocked" : "allowed");
+        setLiveMessage(event.decision === "BLOCK"
+          ? `BLOCK · missing ${(event.missing_dependencies ?? []).join(", ") || "a required dependency"}`
+          : "ALLOW · all required dependencies observed");
       } catch {
-        setLiveMessage("Live event source unavailable; replay remains available.");
+        setLiveMessage("Local event source unavailable; recorded Judge Demo remains available.");
       }
     };
     void readEvents();
@@ -97,177 +155,185 @@ export default function Home() {
     return () => { active = false; clearInterval(interval); };
   }, [mode]);
 
-  const replay = contextSafe(() => {
-    timers.current.forEach(clearTimeout);
+  const startJudgeDemo = () => {
+    clearTimers();
+    setMode("judge");
+    setDemoStep(0);
+    setPhase(demoSteps[0].phase);
     setIsReplaying(true);
-    setPhase("blocked");
-    gsap.killTweensOf([
-      routeRef.current,
-      repairRouteRef.current,
-      liveTokenRef.current,
-      blockRef.current,
-      repairRef.current,
-      allowRef.current,
-    ]);
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduceMotion) {
-      setPhase("allowed");
-      setIsReplaying(false);
-      return;
-    }
+    let elapsed = 0;
+    demoSteps.forEach((step, index) => {
+      elapsed += step.duration;
+      const nextStep = index + 1;
+      if (nextStep < demoSteps.length) {
+        timers.current.push(setTimeout(() => {
+          setDemoStep(nextStep);
+          setPhase(demoSteps[nextStep].phase);
+        }, elapsed));
+      } else {
+        timers.current.push(setTimeout(() => setIsReplaying(false), elapsed));
+      }
+    });
+  };
 
-    gsap.set(routeRef.current, { scaleX: 1 });
-    gsap.set(repairRouteRef.current, { scaleX: 0 });
-    gsap.set(liveTokenRef.current, { y: 0 });
-    gsap.set([blockRef.current, repairRef.current, allowRef.current], { autoAlpha: 0, y: 8 });
-
-    const sequence = gsap.timeline({ onComplete: () => setIsReplaying(false) });
-    sequence
-      .to(liveTokenRef.current, { y: 54, duration: 0.55, ease: "power2.inOut" }, 0.6)
-      .to(blockRef.current, { autoAlpha: 1, y: 0, duration: 0.3, ease: "power2.out" }, 1.05)
-      .call(() => setPhase("repairing"), [], 1.55)
-      .to(liveTokenRef.current, { y: 0, duration: 0.65, ease: "back.out(1.6)" }, 1.72)
-      .to(repairRef.current, { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 1.95)
-      .to(repairRouteRef.current, { scaleX: 1, duration: 0.75, ease: "power2.inOut" }, 2.1)
-      .call(() => setPhase("allowed"), [], 2.72)
-      .to(allowRef.current, { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 2.75);
-  });
-
-  const currentStep = phase === "blocked" ? 2 : phase === "repairing" ? 3 : 4;
-  const phaseTitle = phase === "blocked" ? "Handoff blocked" : phase === "repairing" ? "Bob repairs the handoff" : "Handoff allowed";
-  const phaseBody = phase === "blocked"
-    ? "C and R arrived. L did not survive the boundary."
-    : phase === "repairing"
-      ? "The guard returns a precise repair. Bob folds it into the retry."
-      : "C, R and L are present. Downstream execution may proceed.";
+  const activePhase = phase;
+  const activeStep = demoStep === null ? null : demoSteps[demoStep];
+  const without = evidence.controlled_evidence.without_live_n_write_compat;
+  const withRequirement = evidence.controlled_evidence.with_live_n_write_compat;
+  const stepProgress = demoStep === null ? 0 : ((demoStep + 1) / demoSteps.length) * 100;
 
   return (
-    <main className="seam-app" ref={rootRef}>
+    <main className="seam-app">
       <header className="topbar">
-        <a className="wordmark" href="#" aria-label="SEAM home"><span className="wordmark-seam">SEAM</span><span className="wordmark-rule" /> <span>semantic boundary guard</span></a>
+        <a className="wordmark" href="#top" aria-label="SEAM home"><span className="wordmark-seam">SEAM</span><span className="wordmark-rule" /><span>semantic integrity layer</span></a>
         <div className="topbar-actions">
-          <span className="verified-badge"><span /> recorded verified run</span>
-          <div className="mode-switch" role="group" aria-label="Demo mode">
-            {(["replay", "live"] as Mode[]).map((item) => (
-              <button key={item} type="button" aria-pressed={mode === item} onClick={() => setMode(item)}>
-                {item === "replay" ? "Replay" : "Live"}
-              </button>
-            ))}
-          </div>
+          <span className="bob-badge"><span className="bob-dot" /> IBM Bob IDE · recorded runtime</span>
+          <button className="mode-button" type="button" onClick={() => {
+            clearTimers();
+            setIsReplaying(false);
+            setDemoStep(null);
+            if (mode === "live") {
+              setMode("judge");
+              setPhase("blocked");
+            } else {
+              setMode("live");
+            }
+          }} aria-pressed={mode === "live"}>{mode === "live" ? <Play size={14} /> : <Radio size={14} />} {mode === "live" ? "Recorded Judge Demo" : "Live Bob events"}</button>
         </div>
       </header>
 
-      <section className="hero">
-        <div className="hero-kicker"><span className="kicker-line" /> agent handoff / customer migration</div>
-        <h1>Where requirements cross,<br /><em>safety is decided.</em></h1>
-        <div className="hero-bottom">
-          <p>Bob understood the system. The first handoff did not. Discover what must survive delegation. Prove it. Enforce it.</p>
-          <button className="replay-cta" type="button" onClick={replay} disabled={isReplaying || mode === "live"}>
-            <Play size={15} fill="currentColor" />
-            {isReplaying ? "Replaying verified run" : "Replay verified run"}
+      <section className="hero" id="top">
+        <div className="hero-copy">
+          <div className="hero-kicker"><span /> AI-ASSISTED APPLICATION MAINTENANCE · RELEASE SAFETY</div>
+          <h1>Bob knew the requirement.<br /><em>The handoff lost it.</em></h1>
+          <p>SEAM catches requirements lost when AI coding agents delegate — before the next agent runs.</p>
+          <div className="hero-category">Semantic Integrity Layer for Agentic Software</div>
+        </div>
+        <div className="hero-meta">
+          <span>THE DEVELOPER TASK</span>
+          <strong>{evidence.task}</strong>
+          <small>Database change · rolling release · existing customer data</small>
+        </div>
+      </section>
+
+      <section className="judge-section" id="judge-demo" aria-label="Recorded Judge Demo">
+        <div className="judge-heading">
+          <div><span className="eyebrow">THE HANDOFF, AT A GLANCE</span><h2>Three rules go in.<br /><em>Only two get through.</em></h2></div>
+          <button className="judge-button" type="button" onClick={startJudgeDemo} disabled={isReplaying || mode === "live"}>
+            {isReplaying ? <Wrench size={16} /> : <Play size={16} fill="currentColor" />}
+            {isReplaying ? "Judge Demo running" : "Play 55-second Judge Demo"}
             <ArrowRight size={16} />
           </button>
         </div>
+        <SemanticHandoffDiff phase={activePhase} />
+        <div className="recovery-strip">
+          <div className="recovery-state recovery-state--blocked"><span>FIRST BOB HANDOFF</span><strong>2 / 3 → BLOCK</strong><small>SEAM stops the subagent before it runs</small></div>
+          <ArrowRight className="recovery-arrow" size={19} />
+          <div className="recovery-middle"><Wrench size={17} /><span>Bob receives the feedback<br /><b>repairs and retries</b></span></div>
+          <ArrowRight className="recovery-arrow" size={19} />
+          <div className="recovery-state recovery-state--allowed"><span>REPAIRED HANDOFF</span><strong>3 / 3 → ALLOW</strong><small>Implementation continues</small></div>
+        </div>
+        {activeStep && (
+          <div className="demo-progress" aria-live="polite">
+            <div className="demo-progress-label"><span>RECORDED REPLAY · STEP {String(demoStep! + 1).padStart(2, "0")} / {demoSteps.length}</span><strong>{activeStep.caption}</strong></div>
+            <div className="progress-track" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(stepProgress)}><span style={{ width: `${stepProgress}%` }} /></div>
+          </div>
+        )}
+        {mode === "live" && <div className="live-status"><Radio size={14} /> {liveMessage}</div>}
       </section>
 
-      <section className="discovery-strip" aria-label="Discover, prove and compile the semantic contract">
-        <div className="discovery-title"><span className="section-number">00</span><div><b>DISCOVER → PROVE → COMPILE</b><small>Evidence-backed dependencies before enforcement</small></div></div>
-        <div className="discovery-signals">
-          <div className="discovery-signal"><span>client-support.md</span><b>C</b><small>previous client payload</small></div>
-          <div className="discovery-signal"><span>rollout-policy.md</span><b>R</b><small>N / N+1 coexist</small></div>
-          <div className="discovery-signal discovery-signal--live"><span>coexistence + N writer</span><b>L</b><small>live legacy writes possible</small></div>
-        </div>
-        <div className="discovery-proof"><div><span>WITHOUT L</span><b>4/5 × 3</b></div><div><span>WITH L</span><b>5/5 × 3</b></div><strong>PROVEN<br /><small>this workflow</small></strong></div>
-        <div className="discovery-compile"><span>COMPILE</span><b>semantic contract</b><ArrowRight size={15} /></div>
+      <section className="result-strip" aria-label="Recorded run results">
+        <div className="result-lead"><span>RECORDED IBM BOB IDE RUN</span><strong>Block. Repair. Retry. Continue.</strong></div>
+        <div><span>Normal tests</span><b>{evidence.verification.normal_tests}</b></div>
+        <div><span>System invariants</span><b>{evidence.verification.system_evaluator}</b></div>
+        <div><span>Verified retry</span><b>ALLOW</b></div>
       </section>
 
-      <section className="mission-strip" aria-label="Current task">
-        <div><span className="strip-label">TASK</span><strong>{evidence.task}</strong></div>
-        <div><span className="strip-label">CONTRACT</span><strong>C / R / L</strong></div>
-        <div><span className="strip-label">MODE</span><strong>{mode === "replay" ? "Recorded evidence" : "Local events"}</strong></div>
-      </section>
-
-      <section className="flow-section" aria-label="Handoff flow">
-        <div className="flow-heading">
-          <div><span className="section-number">01</span><span>Follow the requirement</span></div>
-          <span className="flow-caption">A live path through the boundary</span>
-        </div>
-
-        <div className="flow-map">
-          <div className="flow-route" ref={routeRef} />
-          <div className="flow-repair-route" ref={repairRouteRef} />
-          <div className="flow-station flow-station--context">
-            <div className="station-label">Context <span>01</span></div>
-            <h2>What Bob knew</h2>
-            <p>Three semantic dependencies existed before delegation.</p>
-            <div className="dependency-row">
-              {evidence.dependencies.map((dependency) => <span key={dependency.id} className="dependency-chip"><b>{dependency.id}</b> {dependency.name.replaceAll("_", " ")}</span>)}
-            </div>
-          </div>
-
-          <div className="flow-station flow-station--boundary">
-            <div className="station-label">Handoff <span>02</span></div>
-            <h2>spawn_subagent</h2>
-            <p>SEAM reads the actual description before execution.</p>
-            <div className="boundary-check">
-              {evidence.dependencies.map((dependency) => {
-                const present = dependencyStatus(dependency.id, phase);
-                return <div className={"boundary-token " + (present ? "boundary-token--ok" : "boundary-token--missing")} key={dependency.id}>
-                  <span>{dependency.id}</span><StatusMark ok={present} />
-                </div>;
-              })}
-            </div>
-            <div className="live-token" ref={liveTokenRef}>L</div>
-          </div>
-
-          <div className="flow-station flow-station--result">
-            <div className="station-label">Result <span>03</span></div>
-            <h2>Downstream safety</h2>
-            <div className="result-score"><span>before repair</span><strong>4/5</strong><small>L0 · repeat-01 / 02 / 03</small></div>
-            <div className={"result-score result-score--after " + (phase === "allowed" ? "result-score--active" : "")}><span>after repair</span><strong>5/5</strong><small>L1 · repeat-01 / 02 / 03</small></div>
-          </div>
-
-          <div className="decision-stack">
-            <div className="decision decision--block" ref={blockRef}><CircleAlert size={18} /><span><b>BLOCK</b> L is missing</span></div>
-            <div className="decision decision--repair" ref={repairRef}><Wrench size={18} /><span><b>REPAIR</b> Bob retries</span></div>
-            <div className="decision decision--allow" ref={allowRef}><ShieldCheck size={18} /><span><b>ALLOW</b> all semantics present</span></div>
-          </div>
-        </div>
-
-        <div className="flow-status" aria-live="polite">
-          <div className={"status-message status-message--" + phase}>
-            {phase === "allowed" ? <ShieldCheck size={20} /> : phase === "repairing" ? <Wrench size={20} /> : <CircleAlert size={20} />}
-            <div><strong>{phaseTitle}</strong><p>{phaseBody}</p></div>
-            {phase === "blocked" && <div className="missing-status"><span>missing</span><b>LIVE_N_WRITE_COMPAT</b></div>}
-          </div>
-          {mode === "live" && <div className="live-status"><Radio size={14} /> {liveMessage}</div>}
+      <section className="consequence-section">
+        <div className="section-intro"><span className="eyebrow">WHY THE MISSING RULE MATTERS</span><h2>Locally correct code.<br /><em>System-level failure.</em></h2></div>
+        <div className="consequence-chain">
+          <div><span className="chain-number">01</span><b>During rollout,</b><p>the old version is still running.</p></div>
+          <ArrowDown size={18} />
+          <div><span className="chain-number">02</span><b>It still writes the old customer-name field.</b><p><code>customer_name</code></p></div>
+          <ArrowDown size={18} />
+          <div><span className="chain-number">03</span><b>The new version looks for the new field.</b><p><code>full_name</code></p></div>
+          <ArrowRight className="chain-result-arrow" size={20} />
+          <div className="consequence-outcome"><CircleAlert size={19} /><b>New customer data can be missed.</b></div>
         </div>
       </section>
 
-      <section className="sequence-section">
-        <div className="flow-heading"><div><span className="section-number">02</span><span>The handoff in motion</span></div><span className="flow-caption">Use Replay to see the boundary change state</span></div>
-        <div className="sequence-track">
-          {timeline.map(([number, label], index) => (
-            <div className={"sequence-step " + (index <= currentStep ? "sequence-step--active" : "")} key={number}>
-              <span className="sequence-node">{index < currentStep ? <Check size={13} /> : number}</span>
-              <span>{label}</span>
-              {index < timeline.length - 1 && <i className={index < currentStep ? "sequence-line--active" : ""} />}
-            </div>
-          ))}
+      <section className="how-section" id="how-seam-knows">
+        <div className="section-intro section-intro--wide"><span className="eyebrow">SIMPLE FIRST · EVIDENCE SECOND</span><h2>How does SEAM know<br /><em>what matters?</em></h2></div>
+        <div className="how-grid">
+          <article className="how-card how-card--discover"><span className="how-step">01 · DISCOVER</span><h3>Repository facts</h3><p>Old and new versions overlap. The old version still writes legacy customer data.</p><small>rollout policy + frozen N writer</small></article>
+          <ArrowRight className="how-arrow" size={18} />
+          <article className="how-card how-card--derive"><span className="how-step">CANDIDATE</span><h3>Keep reading old writes</h3><p>The new version must continue to read data written by the old one.</p><small>source-linked reasoning</small></article>
+          <ArrowRight className="how-arrow" size={18} />
+          <article className="how-card how-card--prove"><span className="how-step">02 · PROVE</span><h3>Controlled comparison</h3><div className="mini-score"><span>WITHOUT</span><b>{without.join(" · ")}</b></div><div className="mini-score"><span>WITH</span><b>{withRequirement.join(" · ")}</b></div><strong className="proven-tag">PROVEN IN THIS WORKFLOW</strong></article>
+          <ArrowRight className="how-arrow" size={18} />
+          <article className="how-card how-card--compile"><span className="how-step">03 · COMPILE → ENFORCE</span><h3>Make the rule executable</h3><p>Compile the evidence-backed requirement into a boundary contract. Inspect Bob’s handoff before the subagent runs.</p><small>existing Bob gate · unchanged runtime</small></article>
         </div>
+        <p className="evidence-qualifier">Discovery proposes what may matter. Counterfactual evidence determines what actually mattered.</p>
       </section>
 
-      <section className="evidence-section">
-        <div className="evidence-heading"><span className="section-number">03</span><h2>One sentence changed the outcome.</h2><p>The L0 and L1 delegation payloads were byte-for-byte identical except for the live-write compatibility requirement.</p></div>
+      <section className="bob-section" id="why-bob">
+        <div className="bob-copy"><span className="eyebrow">WHY IBM BOB? · BUILT ON THE BOB DELEGATION BOUNDARY</span><h2>Bob gives SEAM<br /><em>a real place to act.</em></h2><p>SEAM is built around the moment Bob delegates work to an isolated subagent. The subagent stays focused; SEAM checks that critical meaning survives the handoff.</p></div>
+        <div className="bob-mechanism">
+          <div className="bob-node"><span>IBM BOB</span><b>Agent mode</b><small>parent agent</small></div><ArrowDown size={18} />
+          <div className="bob-node bob-node--tool"><span>REAL BOB TOOL</span><b>spawn_subagent</b><small>focused, isolated context</small></div><ArrowDown size={18} />
+          <div className="bob-node bob-node--seam"><span>BEFORE EXECUTION</span><b>SEAM · PreToolUse</b><small>inspect the actual tool call</small></div>
+          <div className="bob-choices"><span className="choice-block">BLOCK · return repair feedback</span><span className="choice-allow">ALLOW · subagent starts</span></div>
+          <div className="bob-recovery"><Wrench size={15} /> Bob can repair the handoff and retry</div>
+        </div>
+        <div className="bob-facts"><div><b>Bob Agent mode</b><span>can delegate work to subagents</span></div><div><b>Isolated context</b><span>the parent explicitly passes what its subagent needs</span></div><div><b>PreToolUse lifecycle hook</b><span>SEAM can inspect and block before execution</span></div></div>
+        <p className="sponsor-line">Bob provides the real agent-to-agent boundary. SEAM makes that boundary semantically verifiable.</p>
+      </section>
+
+      <section className="evidence-section" id="evidence">
+        <div className="evidence-heading"><span className="eyebrow">CONTROLLED BOUNDARY ABLATION</span><h2>One requirement.<br /><em>One measured difference.</em></h2><p>The L0 and L1 payloads were identical except for the live-write compatibility requirement. All six boundary runs were valid.</p></div>
         <div className="evidence-grid">
-          <div className="evidence-card evidence-card--without"><span>without L</span><strong>4/5</strong><small>repeat-01 · repeat-02 · repeat-03</small></div>
+          <div className="evidence-card evidence-card--without"><span>WITHOUT LIVE_N_WRITE_COMPAT</span><strong>4/5</strong><small>{without.length} controlled repeats · each 4/5</small></div>
           <div className="evidence-arrow"><ArrowRight size={22} /></div>
-          <div className="evidence-card evidence-card--with"><span>with L</span><strong>5/5</strong><small>repeat-01 · repeat-02 · repeat-03</small></div>
-          <div className="evidence-facts"><div><span>Normal tests</span><b>{evidence.verification.normal_tests}</b></div><div><span>System evaluator</span><b>{evidence.verification.system_evaluator}</b></div><div><span>Valid boundary runs</span><b>{evidence.controlled_evidence.valid_runs}</b></div></div>
+          <div className="evidence-card evidence-card--with"><span>WITH LIVE_N_WRITE_COMPAT</span><strong>5/5</strong><small>{withRequirement.length} controlled repeats · each 5/5</small></div>
+          <div className="evidence-facts"><div><span>Valid boundary runs</span><b>{evidence.controlled_evidence.valid_runs}</b></div><div><span>Final normal tests</span><b>{evidence.verification.normal_tests}</b></div><div><span>Final system invariants</span><b>{evidence.verification.system_evaluator}</b></div></div>
         </div>
       </section>
 
-      <footer className="footer"><div><span className="footer-mark">S</span> SEAM</div><span>Deterministic contract · recorded evidence · no safety guarantee implied</span><span><GitBranch size={13} /> {evidence.evidence_status.replaceAll("_", " ")}</span></footer>
+      <section className="receipt-section">
+        <div className="section-intro"><span className="eyebrow">AUDITABLE DECISION</span><h2>The handoff leaves<br /><em>a receipt.</em></h2><p>Built from the recorded gate fields: required, observed, missing, and decision.</p></div>
+        <SemanticReceipt phase={activePhase} mode={mode} />
+      </section>
+
+      <section className="value-section">
+        <span className="eyebrow">DEVELOPER WORKFLOW · RELEASE SAFETY</span>
+        <h2>Prevent agent-caused rework<br />and release regressions.</h2>
+        <p>Not generic AI safety: help teams maintain applications and ship schema changes without losing rollout constraints between agents.</p>
+        <blockquote>“We are not trying to give agents infinite context. We make sure the right semantics survive finite context.”</blockquote>
+      </section>
+
+      <section className="objections-section">
+        <span className="eyebrow">FOUR SHORT ANSWERS</span><h2>Why not just…?</h2>
+        <div className="objection-grid">
+          <article><h3>More context?</h3><p>More context does not guarantee the critical requirement survives delegation.</p></article>
+          <article><h3>RAG?</h3><p>Retrieval finds information; SEAM verifies that required meaning crossed the handoff.</p></article>
+          <article><h3>Testing?</h3><p>Tests detect failures after work is produced; SEAM can stop an incomplete delegation before the subagent executes.</p></article>
+          <article><h3>A policy engine?</h3><p>A policy engine assumes the policy is known; SEAM connects candidate semantics to correctness evidence before enforcing them.</p></article>
+        </div>
+      </section>
+
+      <details className="technical-details">
+        <summary>Technical detail · real Bob evidence · source provenance</summary>
+        <div className="technical-grid">
+          <div><b>Actual tool boundary</b><code>spawn_subagent</code><small>Bob IDE · PreToolUse · before execution</small></div>
+          <div><b>Runtime sequence</b><code>BLOCK → repair → ALLOW</code><small>evidence/bob-ide-runtime-events.json</small></div>
+          <div><b>Enforcement contract</b><code>runtime-contracts/customer-field-migration.json</code><small>compiled outside Bob-visible workspace</small></div>
+          <div><b>Bob IDE session evidence</b><code>bob_sessions/</code><small>original session screenshots preserved</small></div>
+          <div><b>Discovery provenance</b><code>infra/rollout-policy.md + evaluator/frozen-vN/legacy-customer-service.ts</code><small>migration + current reader fallback complete the L derivation</small></div>
+          <div><b>Recorded event evidence</b><code>evidence/runtime-demo-summary.md</code><small>BLOCK: C/R observed, L missing · ALLOW: C/R/L observed</small></div>
+        </div>
+      </details>
+
+      <footer className="footer"><div><span className="footer-mark">S</span><strong>SEAM</strong><span>Semantic Integrity Layer for Agentic Software</span></div><span>In this controlled workflow · no universal safety claim</span></footer>
     </main>
   );
 }

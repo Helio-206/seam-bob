@@ -2,74 +2,84 @@
 
 ## Project title
 
-SEAM — Semantic Boundary Guard for Agent Handoffs
+SEAM — Semantic Integrity Layer for Agentic Software
 
-## One-line description
+## Opening
 
-SEAM prevents AI coding agents from losing critical requirements when they
-delegate work to subagents.
+Imagine an AI developer knows three critical rules before starting a job.
+When it delegates that job, only two rules reach the next agent. The code may
+still look correct — but the system can break.
+
+That is the problem SEAM catches.
+
+Bob uses subagents to delegate focused work. SEAM verifies that critical
+meaning survives that real Bob handoff.
+
+## Hook
+
+**Bob knew the requirement. The handoff lost it.**
+
+**Coding agents review code. SEAM reviews what one agent tells another.**
 
 ## Short description
 
-SEAM is a deterministic PreToolUse gate for IBM Bob handoffs. It checks a
-compiled semantic boundary contract before `spawn_subagent` executes, blocks
-missing dependencies, and gives Bob precise repair feedback. In the controlled
-customer-field migration workflow, the isolated live-write dependency changed
-the downstream evaluator from 4/5 to 5/5 in all three paired runs.
+SEAM is the semantic integrity layer for AI agent handoffs. In a recorded IBM
+Bob IDE run, SEAM checks the actual `spawn_subagent` call through Bob's
+`PreToolUse` hook. It blocks the first handoff when a rollout requirement is
+missing, gives Bob repair feedback, and allows the repaired retry. The
+recorded implementation passed 8/8 normal tests and 5/5 system invariants.
 
-## Long description
+## Product story
 
-Agentic coding systems can reason correctly at the parent level and still lose
-one compatibility rule while delegating implementation. SEAM makes that hidden
-boundary observable and enforceable. A compiled contract defines three
-dependencies for a rolling customer-field migration: previous-client payload
-compatibility, N/N+1 rollout compatibility, and live version-N write
-compatibility. The PreToolUse gate inspects the actual `spawn_subagent`
-description with deterministic marker groups. If L is missing, it blocks the
-handoff before downstream execution; Bob repairs the handoff and retries.
+**Without SEAM:** Bob delegates → a critical rollout rule is lost → code looks
+locally valid → a release regression can be found later.
 
-The controlled experiment held the task, baseline, evaluator, and runner
-constant. L0 scored 4/5 in repeat-01, repeat-02, and repeat-03. L1 scored 5/5
-in all three. The official IBM Bob IDE runtime demonstration completed with
-normal tests 8/8 and external invariants 5/5. This is evidence from one
-workflow, not a claim of universal AI safety.
+**With SEAM:** Bob delegates → SEAM detects the missing meaning → the handoff
+is blocked before subagent execution → Bob repairs and retries → work
+continues.
+
+This is developer infrastructure for AI-assisted application maintenance,
+database and schema migration, rolling deployment, and release safety. Its
+value is preventing agent-caused rework and release regressions from
+incomplete handoffs.
+
+## Why IBM Bob
+
+Bob Agent mode can delegate focused work to subagents with isolated context.
+Isolation helps keep each subagent focused; the parent explicitly passes the
+context it needs. SEAM uses Bob's real `PreToolUse` lifecycle hook at the
+`spawn_subagent` boundary, before the subagent executes. Bob receives precise
+remediation feedback and can repair the handoff and retry.
+
+Bob provides the real agent-to-agent boundary. SEAM makes that boundary
+semantically verifiable.
+
+## Discovery and evidence
+
+SEAM Discover deterministically extracts candidate dependencies from the
+demonstrated migration workflow. It connects repository provenance to
+controlled evidence, then compiles the existing semantic boundary contract.
+The isolated `LIVE_N_WRITE_COMPAT` ablation scored 4/5 in all three runs
+without the requirement and 5/5 in all three runs with it. C and R are
+source-supported; L is proven relevant in this controlled workflow. This is
+not a claim that SEAM discovers or proves every requirement.
+
+## Technical category
+
+Semantic Integrity Layer for Agentic Software. “Semantic firewall” describes
+the visual metaphor for the boundary check; it is not the formal category.
 
 ## Technologies
 
-Next.js, TypeScript, Tailwind CSS, Framer Motion, Lucide, Python, IBM Bob
-PreToolUse hooks, Node test runner, and a deterministic JSON contract.
-
-## IBM Bob usage
-
-IBM Bob is essential to the demonstration: it creates the parent/subagent
-boundary, receives the hook feedback, repairs the handoff, and retries the
-delegation. Replay mode is included so the project remains demoable without
-Bob or network access.
-
-## Problem
-
-Critical system constraints can disappear when a parent agent compresses its
-context into a subagent handoff.
-
-## Solution
-
-SEAM checks required semantic dependencies at the delegation boundary and
-blocks before unsafe downstream work executes.
-
-## Innovation
-
-SEAM focuses on semantic continuity at the handoff itself, distinct from
-observability, code review, generic context storage, or post-hoc testing.
-
-## Business value
-
-Engineering and AI platform teams can prevent a class of locally-correct but
-system-unsafe delegated changes before execution.
+Next.js, TypeScript, CSS, Python, IBM Bob `PreToolUse` lifecycle hooks, and a
+deterministic semantic contract.
 
 ## Limitations
 
-The current prototype uses one compiled contract and one migration workflow.
-It does not automatically discover every dependency or guarantee safe code.
+The current prototype demonstrates deterministic discovery and
+evidence-backed enforcement for one migration workflow. It does not guarantee
+safe AI code, eliminate hallucinations, or solve agent context loss
+universally. IBM Bob is not invoked by replay mode.
 
 ## Links
 
@@ -79,14 +89,16 @@ It does not automatically discover every dependency or guarantee safe code.
 
 ## 100–150 word version
 
-SEAM is a Semantic Boundary Guard for agent handoffs. AI coding agents often
-delegate implementation to subagents; the parent may understand a deployment
-constraint that disappears in the compressed handoff. SEAM adds a deterministic
-PreToolUse gate before `spawn_subagent`. A compiled contract checks whether
-critical compatibility dependencies survived. In the customer-field migration
-workflow, the isolated `LIVE_N_WRITE_COMPAT` dependency was the only difference
-between paired payloads. Without it, the external evaluator scored 4/5 in all
-three runs. With it, the score was 5/5 in all three. In the final runtime demo,
-SEAM blocked the first handoff, Bob repaired it, the retry was allowed, normal
-tests passed 8/8, and the evaluator passed 5/5. SEAM demonstrates one workflow,
-not universal AI safety.
+SEAM is the semantic integrity layer for AI agent handoffs. Imagine an AI
+developer knows three critical rules, but when it delegates a job, only two
+reach the next agent. The code may look correct while the system breaks. Bob
+uses subagents for focused work with isolated context. SEAM checks Bob’s real
+`spawn_subagent` call through the `PreToolUse` hook before the subagent runs.
+In the recorded IBM Bob IDE run, SEAM blocked a handoff missing the live-write
+compatibility requirement. Bob received repair feedback, retried with all
+three requirements, and the handoff was allowed. The completed implementation
+passed 8/8 normal tests and 5/5 system invariants. A controlled ablation scored
+4/5 in each of three runs without the requirement and 5/5 in each run with it.
+SEAM demonstrates deterministic discovery and evidence-backed enforcement for
+this migration workflow; it does not claim universal semantic discovery or
+safe code guarantees.

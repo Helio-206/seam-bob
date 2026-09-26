@@ -1,8 +1,8 @@
 # SEAM
 
-## Semantic Boundary Guard for Agent Handoffs
+## Semantic Integrity Layer for Agentic Software
 
-> Bob understood the system. The first handoff did not.
+> Bob knew the requirement. The handoff lost it.
 
 **Discover → Prove → Compile → Enforce**
 
@@ -10,8 +10,8 @@
 
 Repository context → candidate semantic dependencies → controlled counterfactual evidence → compiled contract → Bob `PreToolUse` → **BLOCK / REPAIR / ALLOW**
 
-SEAM prevents AI coding agents from losing critical system requirements when
-they delegate work to subagents.
+AI agents can understand a critical requirement and still lose it when they
+delegate work. SEAM catches that loss before the subagent executes.
 
 ## The problem
 
@@ -20,9 +20,13 @@ understand architecture, compatibility constraints, and deployment rules, but
 the downstream handoff is a compressed representation of that context. A
 subagent can therefore produce locally correct code that is globally unsafe.
 
-SEAM places a deterministic semantic gate at the `spawn_subagent` boundary.
-It checks a compiled contract before the delegated work executes and returns
-precise repair feedback when a dependency is missing.
+In the recorded IBM Bob IDE run, Bob delegated a customer-field migration to a
+focused subagent. Two of three rollout requirements survived. SEAM blocked the
+handoff, Bob repaired it and retried, and the repaired handoff was allowed.
+
+**Coding agents review code. SEAM reviews what one agent tells another.**
+SEAM is for AI-assisted application maintenance, schema migration, rolling
+deployment, and release safety.
 
 Traditional contract enforcement starts after a policy is known. SEAM adds an
 earlier evidence layer: identify candidate semantics, connect them to
@@ -54,7 +58,8 @@ universal guarantee of safe AI code.
 
 ## See it first
 
-The release includes a cinematic replay UI designed for a 16:9 demo:
+The release includes a one-button, approximately 55-second Judge Demo. It
+replays the recorded verified sequence and does not invoke Bob:
 
 ```bash
 npm run install:all
@@ -65,7 +70,18 @@ Open `http://localhost:3000`. Replay mode is the default and works without Bob,
 network access, or credentials. The `LIVE` tab reads sanitized decisions from
 `demo-workspace/.semantic-boundary/events.ndjson` when available.
 
-## Architecture
+## Why IBM Bob
+
+Bob Agent mode can delegate focused work to subagents with isolated context.
+Isolation keeps each subagent focused; the parent explicitly passes the
+information its subagent needs. Bob's `PreToolUse` lifecycle hook lets SEAM
+inspect and block the real `spawn_subagent` call before the subagent executes.
+Bob receives the repair feedback and can retry the handoff.
+
+Bob provides the real agent-to-agent boundary. SEAM makes that boundary
+semantically verifiable. This project does not imply IBM endorsement.
+
+## How SEAM works
 
 ```text
 Repository context
