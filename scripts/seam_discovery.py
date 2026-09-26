@@ -209,8 +209,10 @@ def compile_contract(verified: dict[str, Any], baseline_path: Path = DEFAULT_CON
     baseline_ids = [item["id"] for item in baseline.get("dependencies", [])]
     if set(statuses) != set(baseline_ids):
         raise ValueError("verified dependencies must match the existing customer migration contract ids")
-    # The enforcement contract is preserved byte-semantically. Discovery classifications
-    # are emitted separately as a report and never alter runtime gate behavior.
+    # The compiled contract binds each verified classification into the bytes covered
+    # by its handoff digest. Marker semantics remain unchanged.
+    for dependency in baseline["dependencies"]:
+        dependency["evidence_status"] = statuses[dependency["id"]]
     report = [{"id": dep_id, "status": statuses[dep_id]} for dep_id in baseline_ids]
     return baseline, report
 

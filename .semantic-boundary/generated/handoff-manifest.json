@@ -1,7 +1,7 @@
 {
   "schema": "seam.handoff.v1",
   "contract_id": "customer-field-migration",
-  "contract_sha256": "5d41b2b74116ac95e9dfcf0b03c994a0809ac2dfda2da554f591e47ab9012767",
+  "contract_sha256": "1d9b63c26fcfbb255c8b056acb53b131a08e83d37bb1958e69f5adba64a75214",
   "obligations": [
     {
       "id": "CLIENT_N_MINUS_ONE_PAYLOAD",

@@ -26,13 +26,16 @@ def required_ids(contract: dict[str, Any]) -> list[str]:
     return [d["id"] for d in deps]
 
 
-def build_manifest(contract: dict[str, Any], verified: dict[str, Any]) -> dict[str, Any]:
-    statuses = {item.get("id"): item.get("status") for item in verified.get("dependencies", []) if isinstance(item, dict)}
+def build_manifest(contract: dict[str, Any], verified: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Build from the compiled contract; optional evidence is only consistency-checked."""
+    verified_statuses = {item.get("id"): item.get("status") for item in (verified or {}).get("dependencies", []) if isinstance(item, dict)}
     obligations = []
-    for dep_id in required_ids(contract):
-        status = statuses.get(dep_id)
+    for dependency in contract.get("dependencies", []):
+        dep_id, status = dependency["id"], dependency.get("evidence_status")
         if status not in {"SUPPORTED", "PROVEN"}:
-            raise ValueError(f"verified classification missing or invalid for {dep_id}")
+            raise ValueError(f"compiled contract classification missing or invalid for {dep_id}")
+        if verified is not None and verified_statuses.get(dep_id) != status:
+            raise ValueError(f"compiled contract classification does not match verified evidence for {dep_id}")
         obligations.append({"id": dep_id, "evidence_status": status})
     return {"schema": MANIFEST_SCHEMA, "contract_id": contract.get("contract_id"),
             "contract_sha256": contract_sha256(contract), "obligations": obligations}
@@ -78,6 +81,7 @@ def validate_manifest(manifest: dict[str, Any], contract: dict[str, Any]) -> Val
     obligations = manifest.get("obligations")
     if not isinstance(obligations, list):
         return Validation([], required, errors + ["manifest obligations must be a list"])
+    expected_statuses = {item["id"]: item.get("evidence_status") for item in contract["dependencies"]}
     ids: list[str] = []
     for item in obligations:
         if not isinstance(item, dict) or not isinstance(item.get("id"), str) or item.get("evidence_status") not in {"SUPPORTED", "PROVEN"}:
@@ -90,4 +94,7 @@ def validate_manifest(manifest: dict[str, Any], contract: dict[str, Any]) -> Val
     unknown = sorted(set(ids) - set(required))
     if unknown:
         errors.append("unknown obligation ids: " + ", ".join(unknown))
+    for item in obligations:
+        if isinstance(item, dict) and item.get("id") in expected_statuses and item.get("evidence_status") != expected_statuses[item["id"]]:
+            errors.append(f"evidence_status mismatch for {item['id']}: expected {expected_statuses[item['id']]}")
     return Validation([item for item in required if item in ids], [item for item in required if item not in ids], errors)

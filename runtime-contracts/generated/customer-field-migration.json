@@ -18,6 +18,7 @@
   "dependencies": [
     {
       "id": "CLIENT_N_MINUS_ONE_PAYLOAD",
+      "evidence_status": "SUPPORTED",
       "name": "Previous mobile client payload compatibility",
       "source": "docs/client-support.md",
       "marker_groups": [
@@ -60,6 +61,7 @@
     },
     {
       "id": "ROLLING_N_N_PLUS_1_COMPAT",
+      "evidence_status": "SUPPORTED",
       "name": "Rolling N/N+1 schema compatibility",
       "source": "infra/rollout-policy.md",
       "marker_groups": [
@@ -122,6 +124,7 @@
     },
     {
       "id": "LIVE_N_WRITE_COMPAT",
+      "evidence_status": "PROVEN",
       "name": "Live version-N write compatibility",
       "source": "experiments/boundary-ablation/summary-v2.json",
       "marker_groups": [

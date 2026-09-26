@@ -64,6 +64,16 @@ class ProofCarryingProtocolTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("ALLOWED", result.stdout)
 
+    def test_live_status_downgrade_blocks(self):
+        manifest = build_manifest(contract(), verified())
+        next(item for item in manifest["obligations"] if item["id"] == "LIVE_N_WRITE_COMPAT")["evidence_status"] = "SUPPORTED"
+        self.assert_block(self.valid_description(manifest), "evidence_status mismatch for LIVE_N_WRITE_COMPAT")
+
+    def test_client_status_upgrade_blocks(self):
+        manifest = build_manifest(contract(), verified())
+        next(item for item in manifest["obligations"] if item["id"] == "CLIENT_N_MINUS_ONE_PAYLOAD")["evidence_status"] = "PROVEN"
+        self.assert_block(self.valid_description(manifest), "evidence_status mismatch for CLIENT_N_MINUS_ONE_PAYLOAD")
+
     def test_handoff_pass_outcome_fail_is_distinct(self):
         def fake_runner(command, _cwd):
             output = "\n".join(check["check"] for dep in contract()["dependencies"] for check in dep["postconditions"] if check["id"] != "live-n-write-read")
