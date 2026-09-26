@@ -13,6 +13,10 @@ type SafeEvent = {
 };
 
 export async function GET() {
+  const response = (events: SafeEvent[]) => NextResponse.json(
+    { mode: "live", events },
+    { headers: { "Cache-Control": "no-store, max-age=0" } },
+  );
   const configuredPath = process.env.SEMANTIC_BOUNDARY_EVENTS_PATH;
   const filePaths = configuredPath
     ? [configuredPath]
@@ -38,11 +42,11 @@ export async function GET() {
           evidence_reference: event.evidence_reference,
         }));
 
-      return NextResponse.json({ mode: "live", events });
+      return response(events);
     } catch {
       continue;
     }
   }
 
-  return NextResponse.json({ mode: "live", events: [] });
+  return response([]);
 }
