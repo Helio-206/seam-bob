@@ -48,7 +48,7 @@ def render_manifest(manifest: dict[str, Any]) -> str:
 def extract_manifest(description: str) -> dict[str, Any]:
     matches = re.findall(r"<SEAM_MANIFEST>\s*(.*?)\s*</SEAM_MANIFEST>", description, flags=re.DOTALL)
     if len(matches) != 1:
-        raise ValueError("expected exactly one <SEAM_MANIFEST> block")
+        raise ValueError("expected exactly one SEAM manifest block")
     try:
         value = json.loads(matches[0])
     except json.JSONDecodeError as error:

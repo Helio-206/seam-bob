@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from seam_protocol import build_manifest, render_manifest  # noqa: E402
+from seam_protocol import build_manifest, extract_manifest, render_manifest, validate_manifest  # noqa: E402
 from seam_witness import witness  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,11 +45,25 @@ class ProofCarryingProtocolTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
         self.assertIn(expected, result.stdout + result.stderr)
 
-    def test_no_manifest_blocks(self): self.assert_block("Migrate customer name: customer_name to full_name during rolling deployment.", "expected exactly one")
+    def assert_repair_manifest(self, result: subprocess.CompletedProcess[str]) -> dict:
+        output = result.stdout + result.stderr
+        self.assertIn("REQUIRED SEAM MANIFEST", output)
+        manifest = extract_manifest(output)
+        validation = validate_manifest(manifest, contract())
+        self.assertTrue(validation.valid, validation.errors + validation.missing)
+        return manifest
+
+    def test_no_manifest_blocks_with_valid_repair(self):
+        result = invoke("Migrate customer name: customer_name to full_name during rolling deployment.")
+        self.assertEqual(result.returncode, 2)
+        self.assert_repair_manifest(result)
     def test_malformed_manifest_blocks(self): self.assert_block("Migrate customer name: customer_name to full_name during rolling deployment.\n<SEAM_MANIFEST>{oops}</SEAM_MANIFEST>", "malformed")
     def test_wrong_hash_blocks(self):
         manifest = build_manifest(contract(), verified()); manifest["contract_sha256"] = "0" * 64
-        self.assert_block(self.valid_description(manifest), "contract_sha256")
+        result = invoke(self.valid_description(manifest))
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("contract_sha256", result.stdout + result.stderr)
+        self.assert_repair_manifest(result)
     def test_missing_live_blocks_even_with_keywords(self):
         manifest = build_manifest(contract(), verified()); manifest["obligations"] = manifest["obligations"][:-1]
         self.assert_block("Migrate customer name: customer_name to full_name during rolling deployment; old version still writes customer_name and N+1 must read it.\n" + render_manifest(manifest), "LIVE_N_WRITE_COMPAT")
@@ -67,12 +81,23 @@ class ProofCarryingProtocolTests(unittest.TestCase):
     def test_live_status_downgrade_blocks(self):
         manifest = build_manifest(contract(), verified())
         next(item for item in manifest["obligations"] if item["id"] == "LIVE_N_WRITE_COMPAT")["evidence_status"] = "SUPPORTED"
-        self.assert_block(self.valid_description(manifest), "evidence_status mismatch for LIVE_N_WRITE_COMPAT")
+        result = invoke(self.valid_description(manifest))
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("evidence_status mismatch for LIVE_N_WRITE_COMPAT", result.stdout + result.stderr)
+        self.assert_repair_manifest(result)
 
     def test_client_status_upgrade_blocks(self):
         manifest = build_manifest(contract(), verified())
         next(item for item in manifest["obligations"] if item["id"] == "CLIENT_N_MINUS_ONE_PAYLOAD")["evidence_status"] = "PROVEN"
         self.assert_block(self.valid_description(manifest), "evidence_status mismatch for CLIENT_N_MINUS_ONE_PAYLOAD")
+
+    def test_block_repair_manifest_retries_to_allow(self):
+        blocked = invoke("Migrate customer name: customer_name to full_name during rolling deployment.")
+        self.assertEqual(blocked.returncode, 2)
+        repair = self.assert_repair_manifest(blocked)
+        retried = invoke("Migrate customer name: customer_name to full_name during rolling deployment.\n" + render_manifest(repair))
+        self.assertEqual(retried.returncode, 0, retried.stdout + retried.stderr)
+        self.assertIn("ALLOWED", retried.stdout)
 
     def test_handoff_pass_outcome_fail_is_distinct(self):
         def fake_runner(command, _cwd):

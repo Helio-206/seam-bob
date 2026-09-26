@@ -19,7 +19,7 @@ from typing import Any
 
 ROOT_FOR_PROTOCOL = next(parent for parent in Path(__file__).resolve().parents if (parent / "scripts/seam_protocol.py").is_file())
 sys.path.insert(0, str(ROOT_FOR_PROTOCOL / "scripts"))
-from seam_protocol import extract_manifest, validate_manifest
+from seam_protocol import build_manifest, extract_manifest, render_manifest, validate_manifest
 
 
 CONTRACT_ID = "customer-field-migration"
@@ -193,6 +193,14 @@ def evaluate(
     lines.extend(["", "Required repair:"])
     for dependency_id in missing:
         lines.append(by_id[dependency_id]["remediation"])
+    # The contract is deliberately outside Bob's browsable workspace. Give the
+    # parent an exact, current retry payload rather than asking it to reconstruct
+    # a digest or classifications from prose.
+    repair_manifest = build_manifest(contract)
+    repair_validation = validate_manifest(repair_manifest, contract)
+    if not repair_validation.valid:  # Defensive: never emit a repair that cannot pass.
+        raise ValueError("internal error: generated repair manifest is invalid")
+    lines.extend(["", "REQUIRED SEAM MANIFEST", "", render_manifest(repair_manifest)])
 
     event = decision_event(
         tool=tool,
